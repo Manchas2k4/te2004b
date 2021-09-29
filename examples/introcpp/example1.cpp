@@ -20,6 +20,8 @@
 
 const int SIZE = 1000000000; //1e9
 
+using namespace std;
+
 double sumArray(int *array, int size) {
 	double acum;
 	int i;

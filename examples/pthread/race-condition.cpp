@@ -1,6 +1,15 @@
-/**
-* To compile: g++ race-condition.cpp -lpthread
-**/
+// =================================================================
+//
+// File: race-condition.cpp
+// Author: Pedro Perez
+// Description: This file implements a race condition problem.
+//              To compile: g++ race-condition.cpp -lpthread
+//
+// Copyright (c) 2020 by Tecnologico de Monterrey.
+// All Rights Reserved. May be reproduced for any non-commercial
+// purpose.
+//
+// =================================================================
 
 #include <iostream>
 #include <iomanip>

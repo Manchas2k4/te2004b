@@ -3,8 +3,8 @@
 // File: exercise1.cpp
 // Author(s):
 // Description: This file contains the code to count the number of
-//				even numbers within an array using OpenMP.
-//              To compile: g++ exercise1.cpp -fopenmp
+//				even numbers within an array using pthreads.
+//              To compile: g++ exercise1.cpp -lpthread
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

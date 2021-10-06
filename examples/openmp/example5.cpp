@@ -4,6 +4,7 @@
 // Author: Pedro Perez
 // Description: This file contains the code that implements the
 //				bubble sort algorithm using OpenMP.
+//              To compile: g++ example5.cpp -fopenmp
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

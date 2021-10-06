@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file contains the code that searches for the
 // 				smallest value stored in an array using pthreads.
-//              To compile: g++ example1.cpp -lpthread
+//              To compile: g++ example4.cpp -lpthread
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

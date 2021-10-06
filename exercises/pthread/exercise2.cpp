@@ -1,10 +1,10 @@
 // =================================================================
 //
-// File: exercise1.cpp
+// File: exercise2.cpp
 // Author(s):
-// Description: This file contains the code to count the number of
-//				even numbers within an array using OpenMP.
-//              To compile: g++ exercise1.cpp -fopenmp
+// Description: This file contains the code to brute-force all
+//				prime numbers less than MAXIMUM using pthreads.
+//              To compile: g++ exercise2.cpp -lpthread
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -14,36 +14,45 @@
 
 #include <iostream>
 #include <iomanip>
-#include <climits>
+#include <cstring>
+#include <cmath>
 #include <algorithm>
 #include <omp.h>
 #include "utils.h"
 
-const int SIZE = 1000000000; //1e9
+#define MAXIMUM 1000000 //1e6
 
 using namespace std;
 
 // implement your code here
 
 int main(int argc, char* argv[]) {
-	int *a;
+	int i, *a;
 	double ms;
 
-	a = new int[SIZE];
-	fill_array(a, SIZE);
-	display_array("a", a);
+	a = new int[MAXIMUM + 1];
+	memset(a, 0, (MAXIMUM + 1) * sizeof(int));
+	cout << "At first, neither is a prime. We will display to TOP_VALUE:\n";
+	for (i = 2; i < TOP_VALUE; i++) {
+		cout << i << " ";
+	}
+	cout << "\n";
 
 	cout << "Starting..." << endl;
 	ms = 0;
 	for (int i = 0; i < N; i++) {
 		start_timer();
 
-		// call your code here
+		// call your code here.
 
 		ms += stop_timer();
 	}
-	cout << "result = ";
-	// display the result here
+	cout << "Expanding the numbers that are prime to TOP_VALUE:\n";
+	for (i = 2; i < TOP_VALUE; i++) {
+		if (a[i] == 1) {
+			cout << i << " ";
+		}
+	}
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;

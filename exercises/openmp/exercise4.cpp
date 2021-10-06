@@ -3,7 +3,8 @@
 // File: exercise4.cpp
 // Author(s):
 // Description: This file implements the quick sort algorithm using
-//				OpenMP
+//				OpenMP.
+//              To compile: g++ exercise4.cpp -fopenmp
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

@@ -5,7 +5,7 @@
 // Description: This file contains the code to perform the numerical
 //				integration of a function within a defined interval
 //				using pthreads.
-//              To compile: g++ example1.cpp -lpthread
+//              To compile: g++ example3.cpp -lpthread
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

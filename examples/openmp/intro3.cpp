@@ -3,6 +3,7 @@
 // File: intro2.cpp
 // Author: Pedro Perez
 // Description: This file shows the use of basic OpenMP directives.
+//              To compile: g++ intro3.cpp -fopenmp
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

@@ -1,7 +1,7 @@
 // =================================================================
 //
 // File: exercise4.cpp
-// Author: Pedro Perez
+// Author(s):
 // Description: This file implements the quick sort algorithm. The
 //				time this implementation takes will be used as the
 //				basis to calculate the improvement obtained with

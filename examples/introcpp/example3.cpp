@@ -25,10 +25,6 @@ const int RECTS = 1000000000; //1e9
 
 using namespace std;
 
-double function(double x) {
-	return sin(x);
-}
-
 double integration(double a, double b, double (*fn) (double)) {
 	int i;
 	double high, dx, acum, x;
@@ -51,7 +47,7 @@ int main(int argc, char* argv[]) {
 	for (i = 0; i < N; i++) {
 		start_timer();
 
-		result = integration(0, PI, function);
+		result = integration(0, PI, sin);
 
 		ms += stop_timer();
 	}

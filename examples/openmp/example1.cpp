@@ -17,6 +17,8 @@
 #include <omp.h>
 #include "utils.h"
 
+using namespace std;
+
 const int SIZE = 1000000000; //1e9
 
 double sumArray(int *array, int size) {

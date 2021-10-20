@@ -38,7 +38,7 @@ void* minValue(void* param) {
   acum = new int;
   (*acum) = INT_MAX;
   for (i = block->start; i < block->end; i++) {
-    (*acum) += min((*acum), block->arr[i]);
+    (*acum) = min((*acum), block->arr[i]);
   }
   return ( (void**) acum );
 }
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
         }
         for (i = 0; i < THREADS; i++) {
             pthread_join(tids[i], (void**) &acum);
-            result += (*acum);
+            result = (*acum);
             free(acum);
         }
 

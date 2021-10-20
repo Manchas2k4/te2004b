@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example1.cpp
+// File: example4.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that searches for the
 // 				smallest value stored in an array using pthreads.

@@ -2,11 +2,11 @@
 //
 // File: exercise02.cpp
 // Author(s):
-// Description: This file contains the code to brute-force all
-//				prime numbers less than MAXIMUM. The time this
-//				implementation takes will be used as the basis to
-//				calculate the improvement obtained with parallel
-//				technologies.
+// Description: This file contains the code that performs the sum of
+//				all prime numbers less than or equal to MAXIMUM. The 
+//				time this implementation takes will be used as the 
+//				basis to calculate the improvement obtained with 
+//				parallel technologies.
 //
 // Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

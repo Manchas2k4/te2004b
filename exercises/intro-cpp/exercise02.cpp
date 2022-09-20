@@ -1,13 +1,14 @@
 // =================================================================
 //
-// File: exercise3.cpp
+// File: exercise02.cpp
 // Author(s):
-// Description: This file contains the code that implements the
-//				enumeration sort algorithm. The time this implementation
-//				takes ill be used as the basis to calculate the
-//				improvement obtained with parallel technologies.
+// Description: This file contains the code to brute-force all
+//				prime numbers less than MAXIMUM. The time this
+//				implementation takes will be used as the basis to
+//				calculate the improvement obtained with parallel
+//				technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -16,25 +17,22 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <cmath>
+#include <algorithm>
 #include "utils.h"
 
-const int SIZE = 10000; //1e4
+#define MAXIMUM 1000000 //1e6
 
 using namespace std;
 
 // implement your code here
 
 int main(int argc, char* argv[]) {
-	int *a;
+	int i;
 	double ms;
-
-	a = new int[SIZE];
-	random_array(a, SIZE);
-	display_array("before", a);
 
 	cout << "Starting..." << endl;
 	ms = 0;
-	// create object here
 	for (int i = 0; i < N; i++) {
 		start_timer();
 
@@ -42,9 +40,8 @@ int main(int argc, char* argv[]) {
 
 		ms += stop_timer();
 	}
-	display_array("after", b);
+	cout << "result = " << setprecision(5) << result << "\n";
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
-	delete [] a;
 	return 0;
 }

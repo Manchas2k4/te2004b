@@ -1,13 +1,13 @@
 // =================================================================
 //
-// File: exercise1.cpp
+// File: exercise03.cpp
 // Author(s):
-// Description: This file contains the code to count the number of
-//				even numbers within an array. The time this implementation
-//				takes will be used as the basis to calculate the
+// Description: This file contains the code that implements the
+//				enumeration sort algorithm. The time this implementation
+//				takes ill be used as the basis to calculate the
 //				improvement obtained with parallel technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -15,11 +15,10 @@
 
 #include <iostream>
 #include <iomanip>
-#include <climits>
-#include <algorithm>
+#include <cstring>
 #include "utils.h"
 
-const int SIZE = 100000000; //1e8
+const int SIZE = 10000; //1e4
 
 using namespace std;
 
@@ -30,19 +29,20 @@ int main(int argc, char* argv[]) {
 	double ms;
 
 	a = new int[SIZE];
-	fill_array(a, SIZE);
-	display_array("a", a);
+	random_array(a, SIZE);
+	display_array("before", a);
 
 	cout << "Starting..." << endl;
 	ms = 0;
+	// create object here
 	for (int i = 0; i < N; i++) {
 		start_timer();
 
-		// call your code here
+		// call your code here.
 
 		ms += stop_timer();
 	}
-	cout << "result = " << setprecision(5) << result << "\n";
+	display_array("after", b);
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;

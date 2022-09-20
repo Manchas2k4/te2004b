@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example6.cpp
+// File: example06.cpp
 // Author: Pedro Perez
 // Description: This file implements the quick sort algorithm using
 //              pthreads.
@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const int SIZE = 100000; //1e4
+const int SIZE = 100000; //1e5
 
 typedef struct {
     int low, high;

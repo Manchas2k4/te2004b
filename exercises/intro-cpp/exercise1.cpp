@@ -19,7 +19,7 @@
 #include <algorithm>
 #include "utils.h"
 
-const int SIZE = 1000000000; //1e9
+const int SIZE = 100000000; //1e8
 
 using namespace std;
 
@@ -42,8 +42,7 @@ int main(int argc, char* argv[]) {
 
 		ms += stop_timer();
 	}
-	cout << "result = ";
-	// display the result here
+	cout << "result = " << setprecision(5) << result << "\n";
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;

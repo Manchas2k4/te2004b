@@ -1,12 +1,12 @@
 // =================================================================
 //
-// File: example4.cpp
+// File: example04.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that searches for the
 // 				smallest value stored in an array using pthreads.
 //              To compile: g++ example4.cpp -lpthread
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const int SIZE = 1000000000; //1e9
+const int SIZE = 100000000; //1e8
 const int THREADS = 4;
 
 typedef struct {

@@ -28,16 +28,8 @@ using namespace std;
 // implement your code here
 
 int main(int argc, char* argv[]) {
-	int i, *a;
+	int i;
 	double ms;
-
-	a = new int[MAXIMUM + 1];
-	memset(a, 0, (MAXIMUM + 1) * sizeof(int));
-	cout << "At first, neither is a prime. We will display to TOP_VALUE:\n";
-	for (i = 2; i < TOP_VALUE; i++) {
-		cout << i << " ";
-	}
-	cout << "\n";
 
 	cout << "Starting..." << endl;
 	ms = 0;
@@ -48,14 +40,8 @@ int main(int argc, char* argv[]) {
 
 		ms += stop_timer();
 	}
-	cout << "Expanding the numbers that are prime to TOP_VALUE:\n";
-	for (i = 2; i < TOP_VALUE; i++) {
-		if (a[i] == 1) {
-			cout << i << " ";
-		}
-	}
+	cout << "result = " << setprecision(5) << result << "\n";
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
-	delete [] a;
 	return 0;
 }

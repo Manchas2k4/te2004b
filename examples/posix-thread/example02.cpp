@@ -1,12 +1,12 @@
 // =================================================================
 //
-// File: example2.cpp
+// File: example02.cpp
 // Author: Pedro Perez
 // Description: This file implements the multiplication of a matrix
 //				by a vector using pthreads.
-//              To compile: g++ example2.cpp -lpthread
+//              To compile: g++ example02.cpp -lpthread
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -21,8 +21,8 @@
 
 using namespace std;
 
-const int RENS = 30000; //1e5
-const int COLS = 30000;
+const int RENS = 10000; //1e5
+const int COLS = 10000;
 const int THREADS = 4;
 
 typedef struct {

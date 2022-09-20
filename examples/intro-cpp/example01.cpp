@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example1.cpp
+// File: example01.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that adds all the
 //				elements of an integer array. The time this
@@ -8,7 +8,7 @@
 //				calculate the improvement obtained with parallel
 //				technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -19,7 +19,7 @@
 #include <omp.h>
 #include "utils.h"
 
-const int SIZE = 100000000; //1e9
+const int SIZE = 100000000; //1e8
 
 using namespace std;
 
@@ -28,7 +28,6 @@ double sumArray(int *array, int size) {
 	int i;
 
 	acum = 0;
-	#pragma omp parallel for shared(array, size) private(i) reduction(+:acum)
 	for (i = 0; i < size; i++) {
 		acum += array[i];
 	}

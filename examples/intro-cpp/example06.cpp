@@ -1,13 +1,13 @@
 // =================================================================
 //
-// File: example6.cpp
+// File: example06.cpp
 // Author: Pedro Perez
 // Description: This file implements the quick sort algorithm. The
 //				time this implementation takes will be used as the
 //				basis to calculate the improvement obtained with
 //				parallel technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -18,7 +18,7 @@
 #include <cstring>
 #include "utils.h"
 
-const int SIZE = 100000; //1e4
+const int SIZE = 100000; //1e5
 
 using namespace std;
 

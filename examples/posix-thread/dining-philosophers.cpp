@@ -6,7 +6,7 @@
 //              synchronization problem using pthreads.
 //              To compile: g++ dinning-philosophers.cpp -lpthread
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //

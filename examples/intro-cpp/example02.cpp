@@ -1,13 +1,13 @@
 // =================================================================
 //
-// File: example2.cpp
+// File: example02.cpp
 // Author: Pedro Perez
 // Description: This file implements the multiplication of a matrix
 //				by a vector. The time this implementation takes will
 //				be used as the basis to calculate the improvement
 //				obtained with parallel technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -18,15 +18,14 @@
 #include <climits>
 #include "utils.h"
 
-const int RENS = 30000; //1e5
-const int COLS = 30000;
+const int RENS = 10000; //1e5
+const int COLS = 10000;
 
 using namespace std;
 
 void matrixXVector(int *m, int *b, int *c) {
 	int i, j, acum;
 
-	#pragma omp parallel for shared(m, b, c) private(i, j, acum)
 	for (i = 0; i < RENS; i++) {
 		acum = 0;
 		for (j = 0; j < COLS; j++) {

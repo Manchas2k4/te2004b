@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example3.cpp
+// File: example03.cpp
 // Author: Pedro Perez
 // Description: This file contains the code to perform the numerical
 //				integration of a function within a defined interval.
@@ -8,7 +8,7 @@
 //				the basis to calculate the improvement obtained with
 //				parallel technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -22,7 +22,7 @@
 #include "utils.h"
 
 const double PI = 3.14159265;
-const int RECTS = 100000000; //1e9
+const int RECTS = 100000000; //1e8
 
 using namespace std;
 

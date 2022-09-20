@@ -7,7 +7,7 @@
 //				speed up calculation; as well as functions for
 //				initializing integer arrays.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -24,11 +24,9 @@
 #define MMIN(a,b) (((a)<(b))?(a):(b))
 #define MMAX(a,b) (((a)>(b))?(a):(b))
 
-#define N 				10
+#define N 			10
 #define DISPLAY		100
 #define TOP_VALUE	10000
-
-typedef enum color {BLUE, GREEN, RED} Color;
 
 struct timeval startTime, stopTime;
 int started = 0;
@@ -99,7 +97,7 @@ void fill_array(int *array, int size) {
 // @param size, the amount of numbers.
 // =================================================================
 void display_array(const char *text, int *array) {
-	int i;12.5
+	int i;
 
 	printf("%s = [%4i", text, array[0]);
 	for (i = 1; i < DISPLAY; i++) {

@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example5.cpp
+// File: example05.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that implements the
 //				bubble sort algorithm using pthreads.
@@ -19,7 +19,7 @@
 
 using namespace std;
 
-const int SIZE = 10000; //1e4
+const int SIZE = 100000; //1e5
 const int THREADS = 4;
 
 typedef struct {

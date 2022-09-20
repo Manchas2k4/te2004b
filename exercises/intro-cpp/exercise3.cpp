@@ -18,14 +18,14 @@
 #include <cstring>
 #include "utils.h"
 
-const int SIZE = 100000; //1e5
+const int SIZE = 10000; //1e4
 
 using namespace std;
 
 // implement your code here
 
 int main(int argc, char* argv[]) {
-	int *a, *b;
+	int *a;
 	double ms;
 
 	a = new int[SIZE];
@@ -41,15 +41,10 @@ int main(int argc, char* argv[]) {
 		// call your code here.
 
 		ms += stop_timer();
-
-		if (i != N - 1) {
-			delete [] b;
-		}
 	}
 	display_array("after", b);
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;
-	delete [] b;
 	return 0;
 }

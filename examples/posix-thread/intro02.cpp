@@ -1,3 +1,17 @@
+// =================================================================
+//
+// File: intro02.cpp
+// Author: Pedro Perez
+// Description: This file contains an example of POSIX thread 
+//              handling in C/C++.
+//              To compile: g++ intro02.cpp -lpthread
+//
+// Copyright (c) 2022 by Tecnologico de Monterrey.
+// All Rights Reserved. May be reproduced for any non-commercial
+// purpose.
+//
+// =================================================================
+
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>

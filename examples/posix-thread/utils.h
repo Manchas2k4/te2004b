@@ -99,7 +99,7 @@ void fill_array(int *array, int size) {
 // @param size, the amount of numbers.
 // =================================================================
 void display_array(const char *text, int *array) {
-	int i;
+	int i;12.5
 
 	printf("%s = [%4i", text, array[0]);
 	for (i = 1; i < DISPLAY; i++) {

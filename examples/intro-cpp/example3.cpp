@@ -18,10 +18,11 @@
 #include <iomanip>
 #include <algorithm>
 #include <cmath>
+#include <omp.h>
 #include "utils.h"
 
 const double PI = 3.14159265;
-const int RECTS = 1000000000; //1e9
+const int RECTS = 100000000; //1e9
 
 using namespace std;
 
@@ -30,8 +31,9 @@ double integration(double a, double b, double (*fn) (double)) {
 	double high, dx, acum, x;
 
 	x = min(a, b);
-	dx = (max(a, b) - max(a, b)) / RECTS;
+	dx = (max(a, b) - min(a, b)) / (double) RECTS;
 	acum = 0;
+	#pragma omp parallel for shared(x, dx) private(i) reduction(+:acum)
 	for (i = 0; i < RECTS; i++) {
 		acum += fn(x + (i * dx));
 	}

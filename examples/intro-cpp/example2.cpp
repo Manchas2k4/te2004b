@@ -26,6 +26,7 @@ using namespace std;
 void matrixXVector(int *m, int *b, int *c) {
 	int i, j, acum;
 
+	#pragma omp parallel for shared(m, b, c) private(i, j, acum)
 	for (i = 0; i < RENS; i++) {
 		acum = 0;
 		for (j = 0; j < COLS; j++) {

@@ -3,8 +3,10 @@
 // File: example1.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that adds all the
-//				elements of an integer array using OpenMP.
-//              To compile: g++ example1.cpp -fopenmp
+//				elements of an integer array. The time this
+//				implementation takes will be used as the basis to
+//				calculate the improvement obtained with parallel
+//				technologies.
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -17,16 +19,16 @@
 #include <omp.h>
 #include "utils.h"
 
-using namespace std;
+const int SIZE = 100000000; //1e9
 
-const int SIZE = 1000000000; //1e9
+using namespace std;
 
 double sumArray(int *array, int size) {
 	double acum;
 	int i;
 
 	acum = 0;
-	#pragma omp parallel for shared(array, size) reduction(+:acum)
+	#pragma omp parallel for shared(array, size) private(i) reduction(+:acum)
 	for (i = 0; i < size; i++) {
 		acum += array[i];
 	}

@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example1.cpp
+// File: example4.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that searches for the
 // 				smallest value stored in an array using pthreads.
@@ -46,28 +46,28 @@ void* minValue(void* param) {
 int main(int argc, char* argv[]) {
 	int *a, block_size, i, j, pos;
 	double ms, result, *acum;
-    Block blocks[THREADS];
-    pthread_t tids[THREADS];
+  Block blocks[THREADS];
+  pthread_t tids[THREADS];
 
 	a = new int[SIZE];
 	fill_array(a, SIZE);
 	display_array("a", a);
 
-    srand(time(0));
+  srand(time(0));
 	pos = rand() % SIZE;
 	printf("Setting value 0 at %i\n", pos);
 	a[pos] = 0;
 
-    block_size = SIZE / THREADS;
-    for (i = 0; i < THREADS; i++) {
-        blocks[i].arr = a;
-        blocks[i].start = i * block_size;
-        if (i != (THREADS - 1)) {
-            blocks[i].end = (i + 1) * block_size;
-        } else {
-            blocks[i].end = SIZE;
-        }
-    }
+  block_size = SIZE / THREADS;
+  for (i = 0; i < THREADS; i++) {
+      blocks[i].arr = a;
+      blocks[i].start = i * block_size;
+      if (i != (THREADS - 1)) {
+          blocks[i].end = (i + 1) * block_size;
+      } else {
+          blocks[i].end = SIZE;
+      }
+  }
 
 	std::cout << "Starting...\n";
 	ms = 0;

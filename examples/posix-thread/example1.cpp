@@ -37,6 +37,7 @@ void* sumArray(void* param) {
   acum =  new double;
   (*acum) = 0;
   for (i = block->start; i < block->end; i++) {
+  
     (*acum) += block->arr[i];
   }
   return ( (void**) acum );
@@ -45,23 +46,23 @@ void* sumArray(void* param) {
 int main(int argc, char* argv[]) {
 	int *a, block_size, i, j;
 	double ms, result, *acum;
-    Block blocks[THREADS];
-    pthread_t tids[THREADS];
+  Block blocks[THREADS];
+  pthread_t tids[THREADS];
 
 	a = new int[SIZE];
 	fill_array(a, SIZE);
 	display_array("a", a);
 
-    block_size = SIZE / THREADS;
-    for (i = 0; i < THREADS; i++) {
-        blocks[i].arr = a;
-        blocks[i].start = i * block_size;
-        if (i != (THREADS - 1)) {
-            blocks[i].end = (i + 1) * block_size;
-        } else {
-            blocks[i].end = SIZE;
-        }
-    }
+  block_size = SIZE / THREADS;
+  for (i = 0; i < THREADS; i++) {
+      blocks[i].arr = a;
+      blocks[i].start = i * block_size;
+      if (i != (THREADS - 1)) {
+          blocks[i].end = (i + 1) * block_size;
+      } else {
+          blocks[i].end = SIZE;
+      }
+  }
 
 	std::cout << "Starting...\n";
 	ms = 0;

@@ -35,37 +35,37 @@ typedef struct {
 
 void* integration(void* param) {
 	int i;
-    double *acum;
-    Block *block;
+  double *acum;
+  Block *block;
 
-    block = (Block *) param;
-    acum = new double;
+  block = (Block *) param;
+  acum = new double;
 	(*acum) = 0;
 	for (i = block->start; i < block->end; i++) {
 		(*acum) += block->fn(block->x + (i * block->dx));
 	}
 	(*acum) = (*acum) * block->dx;
-    return ( (void**) acum );
+  return ( (void**) acum );
 }
 
 int main(int argc, char* argv[]) {
 	int i, j, block_size;
 	double ms, result, *acum;
-    Block blocks[THREADS];
-    pthread_t tids[THREADS];
+  Block blocks[THREADS];
+  pthread_t tids[THREADS];
 
-    block_size = RECTS / THREADS;
-    for (i = 0; i < THREADS; i++) {
-        blocks[i].start = i * block_size;
-        if (i != (THREADS - 1)) {
-            blocks[i].end = (i + 1) * block_size;
-        } else {
-            blocks[i].end = RECTS;
-        }
-        blocks[i].x = 0;
-        blocks[i].dx = PI / RECTS;
-        blocks[i].fn = sin;
-    }
+  block_size = RECTS / THREADS;
+  for (i = 0; i < THREADS; i++) {
+      blocks[i].start = i * block_size;
+      if (i != (THREADS - 1)) {
+          blocks[i].end = (i + 1) * block_size;
+      } else {
+          blocks[i].end = RECTS;
+      }
+      blocks[i].x = 0;
+      blocks[i].dx = PI / RECTS;
+      blocks[i].fn = sin;
+  }
 
 	std::cout << "Starting...\n";
 	ms = 0;

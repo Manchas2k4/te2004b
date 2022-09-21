@@ -1,10 +1,10 @@
 // =================================================================
 //
-// File: exercise1.cpp
+// File: exercise04.cpp
 // Author(s):
-// Description: This file contains the code to count the number of
-//				even numbers within an array using pthreads.
-//              To compile: g++ exercise1.cpp -lpthread
+// Description: This file implements the PI approximation using the
+//				series proposed by Euler using using pthreads.
+//              To compile: g++ exercise04.cpp -lpthread
 //
 // Copyright (c) 2020 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -14,24 +14,22 @@
 
 #include <iostream>
 #include <iomanip>
-#include <climits>
-#include <algorithm>
+#include <cmath>
 #include <omp.h>
 #include "utils.h"
+#include <omp.h>
 
-const int SIZE = 1000000000; //1e9
+const int LIMIT = 100000000; //1e8
 
 using namespace std;
 
 // implement your code here
 
 int main(int argc, char* argv[]) {
-	int *a;
+	double result;
 	double ms;
 
-	a = new int[SIZE];
-	fill_array(a, SIZE);
-	display_array("a", a);
+	result = 0;
 
 	cout << "Starting..." << endl;
 	ms = 0;
@@ -42,10 +40,8 @@ int main(int argc, char* argv[]) {
 
 		ms += stop_timer();
 	}
-	cout << "result = ";
-	// display the result here
+	cout << "result = " << setprecision(40) << result << "\n";
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
 
-	delete [] a;
 	return 0;
 }

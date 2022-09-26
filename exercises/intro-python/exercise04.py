@@ -18,7 +18,7 @@
 import utils
 import time
 
-SIZE = 100000000 ##1e8
+SIZE = 1000000 ##1e6
 
 ## Place your code here
 

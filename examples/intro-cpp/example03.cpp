@@ -33,7 +33,6 @@ double integration(double a, double b, double (*fn) (double)) {
 	x = min(a, b);
 	dx = (max(a, b) - min(a, b)) / (double) RECTS;
 	acum = 0;
-	#pragma omp parallel for shared(x, dx) private(i) reduction(+:acum)
 	for (i = 0; i < RECTS; i++) {
 		acum += fn(x + (i * dx));
 	}

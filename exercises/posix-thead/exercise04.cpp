@@ -19,7 +19,7 @@
 #include "utils.h"
 #include <omp.h>
 
-const int LIMIT = 100000000; //1e8
+const int LIMIT = 1000000; //1e6
 
 using namespace std;
 

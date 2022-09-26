@@ -18,7 +18,7 @@
 #include <cstring>
 #include "utils.h"
 
-const int SIZE = 100000; //1e5
+const int SIZE = 10000; //1e5
 
 using namespace std;
 

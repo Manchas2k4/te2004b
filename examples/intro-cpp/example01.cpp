@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
 		ms += stop_timer();
 	}
-	std::cout << "sum = " << setprecision(5) << result << "\n";
+	std::cout << "sum = " << fixed << setprecision(0) << result << "\n";
 	std::cout << "avg time =  " << setprecision(5) << (ms / N) << "\n";
 
 	delete [] a;

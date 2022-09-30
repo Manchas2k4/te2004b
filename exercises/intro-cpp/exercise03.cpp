@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 		ms += stop_timer();
 	}
 	display_array("after", b);
-	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
+	cout << "avg time = " << fixed << setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;
 	return 0;

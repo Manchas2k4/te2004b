@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	display_array("after", b);
-	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;
+	cout << "avg time = " << fixed <<  setprecision(5) << (ms / N) << " ms" << endl;
 
 	delete [] a;
 	delete [] b;

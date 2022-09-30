@@ -35,6 +35,7 @@ app
 ._*
 .Spotlight-V100
 .Trashes
+.__pycache__
 ehthumbs.db
 Thumbs.db
 

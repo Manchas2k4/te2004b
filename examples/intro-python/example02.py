@@ -46,5 +46,5 @@ if __name__ == "__main__":
 
         ms = ms + (endTime - startTime)
 
-    utils.displayArray("c: ", c)
-    print("avg time = ", (ms / utils.N), " ms")
+	utils.displayArray("c: ", c)
+	print("avg time = ", (ms / utils.N), " ms")

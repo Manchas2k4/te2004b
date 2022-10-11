@@ -14,7 +14,11 @@
 ## =================================================================
 import utils
 import time
+import multiprocessing as mp
+import threading as th
 
+# CORES = mp.cpu_count() 
+CORES = 4
 SIZE = 10000 ##1e4
 
 def swap(array, i, j):
@@ -22,18 +26,13 @@ def swap(array, i, j):
     array[i] = array[j]
     array[j] = aux
 
-def oddEvenSort(array):
-	aux = array.copy()
-	for step in range(len(aux)):
-		if step % 2 == 0:
-			for i in range (0, len(aux) - 1, 2):
-				if aux[i] > aux[i + 1]:
-					swap(aux, i, i + 1)
-		else:
-			for i in range (1, len(aux) - 1, 2):
-				if aux[i] > aux[i + 1]:
-					swap(aux, i, i + 1)
-	return aux
+def bubbleSort(array):
+    aux = array.copy()
+    for i in range(len(aux) - 1, -1, -1):
+        for j in range(0, i):
+            if aux[j] > aux[j + 1]:
+                swap(aux, j, j + 1)
+    return aux
 
 
 if __name__ == "__main__":
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     for i in range(utils.N):
         startTime = time.time() * 1000
 
-        result = oddEvenSort(array)
+        result = bubbleSort(array)
 
         endTime = time.time() * 1000
 

@@ -31,58 +31,55 @@ typedef struct {
   int start, end; // [start, end)
   double x, dx;
   double (*fn) (double);
+  double result;
 } Block;
 
 void* integration(void* param) {
 	int i;
-  double *acum;
-  Block *block;
+	double acum;
+	Block *block;
 
-  block = (Block *) param;
-  acum = new double;
-	(*acum) = 0;
+	block = (Block *) param;
+	acum = 0;
 	for (i = block->start; i < block->end; i++) {
-		(*acum) += block->fn(block->x + (i * block->dx));
+		acum += block->fn(block->x + (i * block->dx));
 	}
-	(*acum) = (*acum) * block->dx;
-  return ( (void**) acum );
+	block->result = acum * block->dx;
+	pthread_exit(0);
 }
 
 int main(int argc, char* argv[]) {
 	int i, j, block_size;
-	double ms, result, *acum;
-  Block blocks[THREADS];
-  pthread_t tids[THREADS];
+	double ms, result;
+	Block blocks[THREADS];
+	pthread_t tids[THREADS];
 
-  block_size = RECTS / THREADS;
-  for (i = 0; i < THREADS; i++) {
-      blocks[i].start = i * block_size;
-      if (i != (THREADS - 1)) {
-          blocks[i].end = (i + 1) * block_size;
-      } else {
-          blocks[i].end = RECTS;
-      }
-      blocks[i].x = 0;
-      blocks[i].dx = PI / RECTS;
-      blocks[i].fn = sin;
-  }
+	block_size = RECTS / THREADS;
+	for (i = 0; i < THREADS; i++) {
+		blocks[i].start = i * block_size;
+		blocks[i].end = (i != (THREADS - 1))? (i + 1) * block_size : RECTS;
+		blocks[i].x = 0;
+		blocks[i].dx = PI / RECTS;
+		blocks[i].fn = sin;
+		blocks[i].result = 0;
+	}
 
 	std::cout << "Starting...\n";
 	ms = 0;
 	for (j = 0; j < N; j++) {
-        start_timer();
+		start_timer();
 
-        result = 0;
-        for (i = 0; i < THREADS; i++) {
-            pthread_create(&tids[i], NULL, integration, (void*) &blocks[i]);
-        }
-        for (i = 0; i < THREADS; i++) {
-            pthread_join(tids[i], (void**) &acum);
-            result += (*acum);
-            delete acum;
-        }
+		for (i = 0; i < THREADS; i++) {
+			pthread_create(&tids[i], NULL, integration, (void*) &blocks[i]);
+		}
 
-        ms += stop_timer();
+		result = 0;
+		for (i = 0; i < THREADS; i++) {
+			pthread_join(tids[i], NULL);
+			result += blocks[i].result;
+		}
+
+		ms += stop_timer();
 	}
 	std::cout << "area = " << setprecision(5) << result << "\n";
 	std::cout << "avg time =  " << setprecision(5) << (ms / N) << "\n";

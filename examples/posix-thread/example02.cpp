@@ -48,8 +48,8 @@ void* matrixXVector(void* param) {
 int main(int argc, char* argv[]) {
 	int i, j, *m, *b, *c, block_size;
 	double ms;
-  Block blocks[THREADS];
-  pthread_t tids[THREADS];
+	Block blocks[THREADS];
+	pthread_t tids[THREADS];
 
 	m = new int[RENS* COLS];
 	b = new int[RENS];
@@ -62,32 +62,28 @@ int main(int argc, char* argv[]) {
 		b[i] = 1;
 	}
 
-  block_size = RENS / THREADS;
-  for (i = 0; i < THREADS; i++) {
-      blocks[i].start = i * block_size;
-      if (i != (THREADS - 1)) {
-          blocks[i].end = (i + 1) * block_size;
-      } else {
-          blocks[i].end = RENS;
-      }
-      blocks[i].m = m;
-      blocks[i].b = b;
-      blocks[i].c = c;
-  }
+	block_size = RENS / THREADS;
+	for (i = 0; i < THREADS; i++) {
+		blocks[i].start = i * block_size;
+		blocks[i].end = (i != (THREADS - 1))? (i + 1) * block_size : RENS;
+		blocks[i].m = m;
+		blocks[i].b = b;
+		blocks[i].c = c;
+	}
 
 	std::cout << "Starting...\n";
 	ms = 0;
 	for (j = 0; j < N; j++) {
-        start_timer();
+		start_timer();
 
-        for (i = 0; i < THREADS; i++) {
-            pthread_create(&tids[i], NULL, matrixXVector, (void*) &blocks[i]);
-        }
-        for (i = 0; i < THREADS; i++) {
-            pthread_join(tids[i], NULL);
-        }
+		for (i = 0; i < THREADS; i++) {
+			pthread_create(&tids[i], NULL, matrixXVector, (void*) &blocks[i]);
+		}
+		for (i = 0; i < THREADS; i++) {
+			pthread_join(tids[i], NULL);
+		}
 
-        ms += stop_timer();
+		ms += stop_timer();
 	}
 	display_array("c:", c);
 	std::cout << "avg time =  " << setprecision(5) << (ms / N) << "\n";

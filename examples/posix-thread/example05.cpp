@@ -3,10 +3,11 @@
 // File: example05.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that implements the
-//				bubble sort algorithm using pthreads.
-//              To compile: g++ example5.cpp -lpthread
+//				bubble sort algorithm. The time this implementation takes
+//				will be used as the basis to calculate the improvement
+//				obtained with parallel technologies.
 //
-// Copyright (c) 2020 by Tecnologico de Monterrey.
+// Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -15,112 +16,45 @@
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <pthread.h>
 #include "utils.h"
 
-using namespace std;
-
-const int SIZE = 100000; //1e5
+const int SIZE = 10000; //1e5
 const int THREADS = 4;
 
 typedef struct {
-    int start, end;
-    int* A;
+  int start, end; // [start, end)
+  int *arr;
 } Block;
 
+using namespace std;
 
-void mergeAndCopy(int *A, int *B, int low, int mid, int high) {
-    int i, j, k;
-    i = low;
-    j = mid;
-    k = low;
-    while(i < mid && j < high){
-        if(A[i] < A[j]){
-            B[k] = A[i];
-            i++;
-        } else{
-            B[k] = A[j];
-            j++;
-        }
-        k++;
-    }
-    for(; j < high; j++){
-        B[k++] = A[j];
-    }
-
-	for(; i < mid; i++){
-        B[k++] = A[i];
-    }
-    for (i = low; i < high; i++) {
-        A[i] = B[i];
-    }
+void swap(int *A, int i, int j) {
+  int aux = A[i];
+  A[i] = A[j];
+  A[j] = aux;
 }
 
-void* partialSort(void *param) {
-    Block *block;
-    int aux;
+int* oddEvenSort(int *A, int size) {
+    int *B = new int[size];
 
-    block = (Block *) param;
-    for(int i = block->end - 1; i > block->start; i--){
-		for(int j = block->start; j < i; j++){
-			if(block->A[j] > block->A[j + 1]){
-                aux = block->A[i];
-                block->A[i] = block->A[j];
-                block->A[j] = aux;
+    memcpy(B, A, sizeof(int) * size);
+	for (int step = 0; step < size; step++) {
+		if (step % 2 == 0) {
+			for (int i = 0; i <= size - 2; i += 2) {
+				if (B[i] > B[i + 1]) {
+					swap(B, i, i + 1);
+				}
+			}
+		} else {
+			for (int i = 1; i <= size - 2; i += 2) {
+				if (B[i] > B[i + 1]) {
+					swap(B, i, i + 1);
+				}
 			}
 		}
 	}
-    pthread_exit(NULL);
-}
-
-int* bubbleSort(int *array, int size) {
-    int block_size, *A, *B, i, gap, n;
-    Block blocks[THREADS];
-    pthread_t tids[THREADS];
-
-    A  = new int[size];
-    B  = new int[size];
-
-    memcpy(A, array, size * sizeof(int));
-
-    block_size = size / THREADS;
-    for (i = 0; i < THREADS; i++) {
-        blocks[i].start = i * block_size;
-        if (i != (THREADS - 1)) {
-            blocks[i].end = (i + 1) * block_size;
-        } else {
-            blocks[i].end = size;
-        }
-        blocks[i].A = A;
-    }
-
-    for (i = 0; i < THREADS; i++) {
-        pthread_create(&tids[i], NULL, partialSort, (void*) &blocks[i]);
-    }
-
-    for (i = 0; i < THREADS; i++) {
-        pthread_join(tids[i], NULL);
-    }
-
-    n = THREADS;
-    gap = 1;
-    while (n >= 1) {
-        i = 0;
-        while (i < THREADS) {
-            if ( (i + gap) >= THREADS ) {
-                break;
-            }
-
-            mergeAndCopy(A, B, blocks[i].start, blocks[i].end, blocks[i + gap].end);
-            blocks[i].end = blocks[i + gap].end;
-
-            i += (gap * 2);
-        }
-        n = n / 2;
-        gap = gap * 2;
-    }
-
-    delete [] B;
-    return A;
+    return B;
 }
 
 int main(int argc, char* argv[]) {
@@ -136,7 +70,7 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < N; i++) {
 		start_timer();
 
-		b = bubbleSort(a, SIZE);
+		b = oddEvenSort(a, SIZE);
 
 		ms += stop_timer();
 

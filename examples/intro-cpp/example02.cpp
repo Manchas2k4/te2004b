@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Starting...\n";
 	ms = 0;
-	for (i = 0; i < N; i++) {
+	for (j = 0; j < N; j++) {
 		start_timer();
 
 		matrixXVector(m, b, c);

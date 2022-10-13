@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
 	cout << "Starting..." << endl;
 	ms = 0;
-	for (int i = 0; i < N; i++) {
+	for (int j = 0; j < N; j++) {
 		start_timer();
 
 		result = minValue(a, SIZE);

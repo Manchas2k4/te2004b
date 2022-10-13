@@ -26,12 +26,10 @@ const int RECTS = 100000000; //1e8
 
 using namespace std;
 
-double integration(double a, double b, double (*fn) (double)) {
+double integration(double x, double dx, double (*fn) (double)) {
 	int i;
-	double high, dx, acum, x;
+	double acum;
 
-	x = min(a, b);
-	dx = (max(a, b) - min(a, b)) / (double) RECTS;
 	acum = 0;
 	for (i = 0; i < RECTS; i++) {
 		acum += fn(x + (i * dx));
@@ -41,14 +39,17 @@ double integration(double a, double b, double (*fn) (double)) {
 
 int main(int argc, char* argv[]) {
 	int i, j;
-	double ms, result;
+	double ms, result, x, dx;
+
+	x = 0;
+	dx = (PI - 0) / RECTS;
 
 	std::cout << "Starting...\n";
 	ms = 0;
 	for (i = 0; i < N; i++) {
 		start_timer();
 
-		result = integration(0, PI, sin);
+		result = integration(x, dx, sin);
 
 		ms += stop_timer();
 	}

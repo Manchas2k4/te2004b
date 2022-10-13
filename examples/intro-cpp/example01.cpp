@@ -35,7 +35,7 @@ double sumArray(int *array, int size) {
 }
 
 int main(int argc, char* argv[]) {
-	int i, j, *a;
+	int *a;
 	double ms, result;
 
 	a = new int[SIZE];
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "Starting...\n";
 	ms = 0;
-	for (i = 0; i < N; i++) {
+	for (int j = 0; j < N; j++) {
 		start_timer();
 
 		result = sumArray(a, SIZE);

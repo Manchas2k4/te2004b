@@ -24,7 +24,8 @@ const int THREADS = 4;
 
 typedef struct {
   int start, end; // [start, end)
-  int *arr;
+  int *arr, *temp;
+  int step;
 } Block;
 
 using namespace std;
@@ -35,48 +36,64 @@ void swap(int *A, int i, int j) {
   A[j] = aux;
 }
 
-int* oddEvenSort(int *A, int size) {
-    int *B = new int[size];
+void* oneStep(void *param) {
+	int start;
+	Block *block;
 
-    memcpy(B, A, sizeof(int) * size);
-	for (int step = 0; step < size; step++) {
-		if (step % 2 == 0) {
-			for (int i = 0; i <= size - 2; i += 2) {
-				if (B[i] > B[i + 1]) {
-					swap(B, i, i + 1);
-				}
-			}
-		} else {
-			for (int i = 1; i <= size - 2; i += 2) {
-				if (B[i] > B[i + 1]) {
-					swap(B, i, i + 1);
-				}
-			}
+	block = (Block*) param;
+	if (block->step == 0) {
+		start = (block->start % 2 == 0)? block->start : (block->start + 1);
+	} else {
+		start = (block->start % 2 == 1)? (block->start + 1) : block->start;
+	}
+
+	for (int i = start; i < block->end; i += 2) {
+		if (((i + 1) < SIZE) && block->temp[i] > block->temp[i + 1]) {
+			swap(block->temp, i, i + 1);
 		}
 	}
-    return B;
+
+	pthread_exit(0);
 }
 
 int main(int argc, char* argv[]) {
-	int *a, *b;
+	int *a, *b, blockSize;
 	double ms;
+	Block blocks[THREADS];
+	pthread_t tids[THREADS];
 
 	a = new int[SIZE];
 	random_array(a, SIZE);
 	display_array("before", a);
 
+	b = new int[SIZE];
+
+	blockSize = SIZE / THREADS;
+	for (int i = 0; i < THREADS; i++) {
+		blocks[i].arr = a;
+		blocks[i].temp = b;
+		blocks[i].start = i * blockSize;
+		blocks[i].end = (i != (THREADS - 1))? (i + 1) * blockSize : SIZE;
+	}
+
 	cout << "Starting..." << endl;
 	ms = 0;
-	for (int i = 0; i < N; i++) {
+	for (int j = 0; j < N; j++) {
 		start_timer();
 
-		b = oddEvenSort(a, SIZE);
+		memcpy(b, a, sizeof(int) * SIZE);
+		for (int step = 0; step < SIZE; step++) {
+			for (int i = 0; i < THREADS; i++) {
+				blocks[i].step = (step % 2 == 0);
+				pthread_create(&tids[i], NULL, oneStep, (void*) &blocks[i]);
+			}
+
+			for (int i = 0; i < THREADS; i++) {
+				pthread_join(tids[i], NULL);
+			}
+		}
 
 		ms += stop_timer();
-
-        if (i != N - 1) {
-			delete [] b;
-		}
 	}
 	display_array("after", b);
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;

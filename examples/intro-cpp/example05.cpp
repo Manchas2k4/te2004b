@@ -28,10 +28,7 @@ void swap(int *A, int i, int j) {
   A[j] = aux;
 }
 
-int* oddEvenSort(int *A, int size) {
-    int *B = new int[size];
-
-    memcpy(B, A, sizeof(int) * size);
+int* oddEvenSort(int *B, int size) {
 	for (int step = 0; step < size; step++) {
 		if (step % 2 == 0) {
 			for (int i = 0; i <= size - 2; i += 2) {
@@ -58,18 +55,17 @@ int main(int argc, char* argv[]) {
 	random_array(a, SIZE);
 	display_array("before", a);
 
+	b = new int[SIZE];
+
 	cout << "Starting..." << endl;
 	ms = 0;
-	for (int i = 0; i < N; i++) {
+	for (int j = 0; j < N; j++) {
 		start_timer();
 
-		b = oddEvenSort(a, SIZE);
+		memcpy(b, a, sizeof(int) * SIZE);
+		oddEvenSort(b, SIZE);
 
 		ms += stop_timer();
-
-        if (i != N - 1) {
-			delete [] b;
-		}
 	}
 	display_array("after", b);
 	cout << "avg time = " << setprecision(5) << (ms / N) << " ms" << endl;

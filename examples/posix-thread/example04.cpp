@@ -72,14 +72,14 @@ int main(int argc, char* argv[]) {
 	for (j = 0; j < N; j++) {
 		start_timer();
 
-		result = 0;
 		for (i = 0; i < THREADS; i++) {
 			pthread_create(&tids[i], NULL, minValue, (void*) &blocks[i]);
 		}
+
+		result = 0;
 		for (i = 0; i < THREADS; i++) {
-			pthread_join(tids[i], (void**) &acum);
-			result += (*acum);
-			free(acum);
+			pthread_join(tids[i], NULL);
+			result += blocks[i].result;
 		}
 
 		ms += stop_timer();

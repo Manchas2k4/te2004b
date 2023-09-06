@@ -25,7 +25,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define MAXIMUM 1000001 //1e6
+#define MAXIMUM 5000000 //1e6
 
 // implement your code
 

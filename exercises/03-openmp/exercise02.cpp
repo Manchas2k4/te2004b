@@ -7,10 +7,7 @@
 //				technology. To compile:
 //				g++ -o app -fopenmp exercise02.cpp
 //
-// Reference:
-// 	Read the document "exercise02.pdf"
-//
-// Copyright (c) 2022 by Tecnologico de Monterrey.
+// Copyright (c) 2023 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -25,7 +22,7 @@
 using namespace std;
 using namespace std::chrono;
 
-#define MAXIMUM 1000001 //1e6
+#define MAXIMUM 5000000 //5e6
 
 // implement your code
 

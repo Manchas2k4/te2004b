@@ -2,9 +2,10 @@
 //
 // File: example08.cpp
 // Author: Pedro Perez
-// Description: This file implements the merge sort algorithm using 
-//				the OpenMP technology. To compile:
-//				g++ -o app -fopenmp example08.cpp
+// Description: This file implements the merge sort algorithm. The
+//				time this implementation takes will be used as the
+//				basis to calculate the improvement obtained with
+//				parallel technologies.
 //
 // Copyright (c) 2022 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -18,100 +19,84 @@
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
+#include <algorithm>
 #include <omp.h>
 #include "utils.h"
 
 using namespace std;
 using namespace std::chrono;
 
-#define SIZE	10000000 //1e7
-#define GRAIN	10000 //1e4
+#define SIZE 	10000000 //1e7
+#define THREADS	8
 
-void swap(int *a, int i, int j) {
-	int aux = a[i];
-	a[i] = a[j];
-	a[j] = aux;
-}
+void merge(int *A, int *B, int size, int index, int blockSize, int threadsRequired) {
+	int start, mid, end, left, right, i, numberOfThreads;
 
-void copy_array(int *A, int *B, int low, int high) {
-	int size = high - low + 1;
-	memcpy(A + low, B + low, sizeof(int) * size);
-}
-
-void merge(int *A, int *B, int low, int mid, int high) {
-    int i, j, k;
-    i = low;
-    j = mid + 1;
-    k = low;
-    while(i <= mid && j <= high){
-        if(A[i] < A[j]){
-            B[k] = A[i];
-            i++;
-        }else{
-            B[k] = A[j];
-            j++;
-        }
-        k++;
-    }
-    for(; j <= high; j++){
-        B[k++] = A[j];
-    }
-
-	for(; i <= mid; i++){
-        B[k++] = A[i];
-    }
-}
-
-void split(int *A, int *B, int low, int high) {
-    int  mid, size, i, j;
-
-	if ((high - low + 1) == 1) {
-		return;
-	}
-
-    mid = low + ((high - low) / 2);
-    split(A, B, low, mid);
-    split(A, B, mid +1, high);
-    merge(A, B,low, mid, high);
-    copy_array(A, B, low, high);
-}
-
-void merge_sort(int *A, int *B, int low, int high) {
-	split(A, B, low, high);
-}
-
-void parallel_split(int *A, int *B, int low, int high) {
-    int  mid, size, i, j;
-
-	if ((high - low + 1) < GRAIN) {
-		merge_sort(A, B, low, high);
-	} else {
-		mid = low + ((high - low) / 2);
-		#pragma omp parallel
-		{
-			#pragma omp task
-			{
-				parallel_split(A, B, low, mid);
-			}
-
-			#pragma omp task
-			{
-				parallel_split(A, B, mid + 1, high);
-			}
-
-			#pragma omp taskwait
-			{
-				merge(A, B,low, mid, high);
-				copy_array(A,B, low, high);
+	while (index < size) {
+		start = blockSize * index;
+		mid = start + (blockSize / 2) - 1;
+		end = start + blockSize - 1;
+		
+		left = start;
+		right = mid + 1;
+		i = start;
+		
+		if (end > (size - 1)) {
+			end = size - 1;
+		}
+		
+		if (start == end || end <= mid) {
+			return;
+		}
+		
+		while (left <= mid && right <= end) {
+			if (A[left] <= A[right]) {
+				B[i++] = A[left++];
+			} else {
+				B[i++] = A[right++];
 			}
 		}
+		
+		while (left <= mid) {
+			B[i++] = A[left++];
+		}
+		
+		while (right <= end) {
+			B[i++] = A[right++];
+		}
+
+		index += threadsRequired;
 	}
 }
 
-void parallel_merge_sort(int *A, int size) {
-	int *B = new int[size];
-	parallel_split(A, B, 0, size - 1);
-	delete [] B;
+void parallel_merge_sort(int *array, int size) {
+	int *temp, *A, *B, threadsRequired;
+
+	temp = new int[size];
+	memcpy(temp, array, sizeof(int) * size);
+	
+	A = array;
+	B = temp;
+
+	for (int blockSize = 2; blockSize < (2 * size); blockSize *= 2) {
+		threadsRequired = min(THREADS, size / blockSize);
+		if (size % blockSize > 0) {
+			threadsRequired++;
+		}
+		
+		#pragma omp parallel for num_threads(threadsRequired)
+		for (int i = 0; i < threadsRequired; i++) {
+			merge(A, B, SIZE, i, blockSize, threadsRequired);
+		}
+		
+		#pragma omp taskwait
+		{
+			A = (A == array)? temp : array;
+			B = (B == array)? temp : array;
+		}
+	}
+	
+	delete [] temp;
 }
 
 int main(int argc, char* argv[]) {
@@ -126,6 +111,20 @@ int main(int argc, char* argv[]) {
 	display_array("before", array);
 
 	aux = new int[SIZE];
+	
+	/*
+	parallel_merge_sort(array, SIZE);
+	display_array("after", array);
+	
+	
+	cout << "THREADS = " << THREADS << "\n";
+	for (int i = 0; i < 4; i++) {
+		merge(array, aux, SIZE, i, 2);
+	}
+
+	display_array("after", array);
+	display_array("after", aux);
+	*/
 
 	cout << "Starting...\n";
 	timeElapsed = 0;

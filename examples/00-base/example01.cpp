@@ -2,9 +2,10 @@
 //
 // File: example01.cpp
 // Author: Pedro Perez
-// Description: This file implements the addition of two vectors 
-//		using C/C++ threads. To compile:
-//		g++ -o app -pthread example01.cpp
+// Description: This file implements the addition of two vectors. 
+//				The time this implementation takes will be used as 
+//				the basis to calculate the improvement obtained with 
+//				parallel technologies.
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -15,23 +16,16 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <thread>
 #include "utils.h"
 
 using namespace std;
 using namespace std::chrono;
 
-#define SIZE    1000000000 // 1e9
-#define THREADS std::thread::hardware_concurrency()
+const int SIZE = 1000000000; // 1e9
 
-typedef struct {
-    int *c, *a, *b;
-    int start, end;
-} Block;
-
-void add_vectors(Block &b) {
-    for (int i = b.start; i < b.end; i++) {
-        b.c[i] = b.a[i] + b.b[i];
+void add_vector(int *c, int *a, int *b, int size) {
+    for (int i = 0; i < size; i++) {
+        c[i] = a[i] + b[i];
     }
 }
 
@@ -42,10 +36,6 @@ int main(int argc, char* argv[]) {
     high_resolution_clock::time_point start, end;
     double timeElapsed;
 
-    int blockSize;
-    Block blocks[THREADS];
-    thread threads[THREADS];
-
     a = new int [SIZE];
     b = new int [SIZE];
     c = new int [SIZE];
@@ -55,27 +45,12 @@ int main(int argc, char* argv[]) {
     fill_array(b, SIZE);
     display_array("b:", b);
 
-    blockSize = SIZE / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].c = c;
-        blocks[i].a = a;
-        blocks[i].b = b;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
-    }
-
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
-        for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(add_vectors, std::ref(blocks[i]));
-        }
-
-        for (int i = 0; i < THREADS; i++) {
-            threads[i].join();
-        }
+        add_vector(c, a, b, SIZE);
 
         end = high_resolution_clock::now();
         timeElapsed += 

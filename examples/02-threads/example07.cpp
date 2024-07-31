@@ -2,11 +2,11 @@
 //
 // File: example07.cpp
 // Author: Pedro Perez
-// Description: This file implements the code that blurs a given
-//				image using POSIX threads. Uses OpenCV, to compile:
-//				g++ -o app -pthread example07.cpp `pkg-config --cflags --libs opencv4`
+// Description: This file shows the parallel implementation using of the
+//		merge sort algorithm using C/C++ threads. To compile:
+//		g++ -o app --pthread example07.cpp
 //
-// Copyright (c) 2023 by Tecnologico de Monterrey.
+// Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
@@ -15,126 +15,138 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgcodecs/imgcodecs.hpp>
-#include <pthread.h>
+#include <algorithm>
+#include <thread>
+#include <cstdlib>
+#include <cstring>
 #include "utils.h"
-
-#define BLUR_WINDOW 15
-#define MAXTHREADS 	8
-
-typedef enum color {BLUE, GREEN, RED} Color;
 
 using namespace std;
 using namespace std::chrono;
 
+#define SIZE 	10000000 //1e7
+#define THREADS std::thread::hardware_concurrency()
+
 typedef struct {
-	cv::Mat *src;
-	cv::Mat *dest;
-	int start, end;
+    int *A, *B, size, index, blockSize, threadsRequired;
 } Block;
 
-void blur_pixel(cv::Mat &src, cv::Mat &dest, int ren, int col) {
-	int side_pixels, cells;
-	int tmp_ren, tmp_col;
-	float r, g, b;
+void merge_task(Block &b) {
+    int start, mid, end, left, right, i, numberOfThreads;
 
-	side_pixels = (BLUR_WINDOW - 1) / 2;
-	cells = (BLUR_WINDOW * BLUR_WINDOW);
-	r = 0; g = 0; b = 0;
-	for (int i = -side_pixels; i <= side_pixels; i++) {
-		for (int j = -side_pixels; j <= side_pixels; j++) {
-			tmp_ren = MIN( MAX(ren + i, 0), src.rows - 1);
-			tmp_col = MIN( MAX(col + j, 0), src.cols - 1);
+    while (b.index < b.size) {
+        start = b.blockSize * b.index;
+        mid = start + (b.blockSize / 2) - 1;
+        end = start + b.blockSize - 1;
+        
+        left = start;
+        right = mid + 1;
+        i = start;
+        
+        if (end > (b.size - 1)) {
+            end = b.size - 1;
+        }
+        
+        if (start == end || end <= mid) {
+            return;
+        }
+        
+        while (left <= mid && right <= end) {
+            if (b.A[left] <= b.A[right]) {
+                b.B[i++] = b.A[left++];
+            } else {
+                b.B[i++] = b.A[right++];
+            }
+        }
+        
+        while (left <= mid) {
+            b.B[i++] = b.A[left++];
+        }
+        
+        while (right <= end) {
+            b.B[i++] = b.A[right++];
+        }
 
-			r += (float) src.at<cv::Vec3b>(tmp_ren, tmp_col)[RED];
-			g += (float) src.at<cv::Vec3b>(tmp_ren, tmp_col)[GREEN];
-			b += (float) src.at<cv::Vec3b>(tmp_ren, tmp_col)[BLUE];
-		}
-	}
-
-	dest.at<cv::Vec3b>(ren, col)[RED] =  (unsigned char) (r / cells);
-	dest.at<cv::Vec3b>(ren, col)[GREEN] = (unsigned char) (g / cells);
-	dest.at<cv::Vec3b>(ren, col)[BLUE] = (unsigned char) (b / cells);
+        b.index += b.threadsRequired;
+    }
 }
 
-void* blur(void* param) {
-	Block *block;
+void parallel_merge_sort(int *array, int size) {
+    int *temp, *A, *B, threadsRequired;
+    Block *blocks; //[THREADS];
+    thread *threads; //[THREADS]; 
 
-	block = (Block*) param;
-	for(int i = block->start; i < block->end; i++) {
-		for(int j = 0; j < block->src->cols; j++) {
-			blur_pixel(*block->src, *block->dest, i, j);
-		}
-	}
-	return 0;
+    temp = new int[size];
+    memcpy(temp, array, sizeof(int) * size);
+    
+    A = array;
+    B = temp;
+
+    for (int blockSize = 2; blockSize < (2 * size); blockSize *= 2) {
+        threadsRequired = min((int) THREADS, size / blockSize);
+        if (size % blockSize > 0) {
+            threadsRequired++;
+        }
+        
+        blocks = new Block[threadsRequired];
+        threads = new thread[threadsRequired];
+        for (int i = 0; i < threadsRequired; i++) {
+            blocks[i].A = A;
+            blocks[i].B = B;
+            blocks[i].size = size;
+            blocks[i].index = i;
+            blocks[i].blockSize = blockSize;
+            blocks[i].threadsRequired = threadsRequired;
+            threads[i] = thread(merge_task, std::ref(blocks[i]));
+        }
+
+        for (int i = 0; i < threadsRequired; i++) {
+            threads[i].join();
+        }
+
+        delete [] blocks;
+        delete [] threads;
+        
+        A = (A == array)? temp : array;
+        B = (B == array)? temp : array;
+    }
+    
+    delete [] temp;
 }
 
 int main(int argc, char* argv[]) {
-	// These variables are used to keep track of the execution time.
-	high_resolution_clock::time_point start, end;
-	double timeElapsed;
+    int *array, *aux;
 
-	int blockSize;
-	Block blocks[MAXTHREADS];
-	pthread_t threads[MAXTHREADS];
+    // These variables are used to keep track of the execution time.
+    high_resolution_clock::time_point start, end;
+    double timeElapsed;
 
-	if (argc != 2) {
-		cout << "usage: " << argv[0] << " source_file\n";
-		return -1;
-	}
+    array = new int[SIZE];
+    random_array(array, SIZE);
+    display_array("before", array);
 
-	cv::Mat src = cv::imread(argv[1], cv::IMREAD_COLOR);
-	cv::Mat dest = cv::Mat(src.rows, src.cols, CV_8UC3);
+    aux = new int[SIZE];
 
-	if (!src.data) {
-		cout << "Could not load image file: " << argv[1] << "\n";
-		return -1;
-	}
+    cout << "Starting...\n";
+    timeElapsed = 0;
+    for (int j = 0; j < N; j++) {
+        memcpy(aux, array, sizeof(int) * SIZE);
 
-	blockSize = src.rows / MAXTHREADS;
-	for (int i = 0; i < MAXTHREADS; i++) {
-		blocks[i].src = &src;
-		blocks[i].dest = &dest;
-		blocks[i].start = (i * blockSize);
-		blocks[i].end = (i != (MAXTHREADS - 1))? ((i + 1) * blockSize) : src.rows;
-	}	
+        start = high_resolution_clock::now();
 
-	cout << "Starting...\n";
-	timeElapsed = 0;
-	for (int j = 0; j < N; j++) {
-		start = high_resolution_clock::now();
+        parallel_merge_sort(aux, SIZE);
 
-		for (int i = 0; i < MAXTHREADS; i++) {
-			pthread_create(&threads[i], NULL, blur, &blocks[i]);
-		}
+        end = high_resolution_clock::now();
+        timeElapsed += 
+            duration<double, std::milli>(end - start).count();
+    }
 
-		for (int i = 0; i < MAXTHREADS; i++) {
-			pthread_join(threads[i], NULL);
-		}
+    memcpy(array, aux, sizeof(int) * SIZE);
+    display_array("after", array);
+    cout << "avg time = " << fixed << setprecision(3) 
+         << (timeElapsed / N) <<  " ms\n";
 
-		end = high_resolution_clock::now();
-		timeElapsed += 
-			duration<double, std::milli>(end - start).count();
-	}
-	cout << "avg time = " << fixed << setprecision(3) 
-		 << (timeElapsed / N) <<  " ms\n";
-
-	/*
-	cv::namedWindow("Original", cv::WINDOW_AUTOSIZE);
-	cv::imshow("Original", src);
-
-	cv::namedWindow("Blur", cv::WINDOW_AUTOSIZE);
-	cv::imshow("Blur", dest);
-
-	cv::waitKey(0);
-	*/
-
-	cv::imwrite("blur.png", dest);
-
-	return 0;
+    delete [] array;
+    delete [] aux;
+    return 0;
 }

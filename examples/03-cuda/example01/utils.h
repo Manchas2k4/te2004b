@@ -32,12 +32,12 @@
 // @param size, the amount of numbers.
 // =================================================================
 void random_array(int *array, int size) {
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution(1, TOP_VALUE);
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(1, TOP_VALUE);
 
-	for (int i = 0; i < size; i++) {
-		array[i] = distribution(generator);
-	}
+    for (int i = 0; i < size; i++) {
+        array[i] = distribution(generator);
+    }
 }
 
 // =================================================================
@@ -48,9 +48,9 @@ void random_array(int *array, int size) {
 // @param size, the amount of numbers.
 // =================================================================
 void fill_array(int *array, int size) {
-	for (int i = 0; i < size; i++) {
-		array[i] = (i % TOP_VALUE) + 1;
-	}
+    for (int i = 0; i < size; i++) {
+        array[i] = (i % TOP_VALUE) + 1;
+    }
 }
 
 // =================================================================
@@ -60,10 +60,10 @@ void fill_array(int *array, int size) {
 // @param size, the amount of numbers.
 // =================================================================
 void display_array(const char *text, int *array) {
-	printf("%s = [%4i", text, array[0]);
-	for (int i = 1; i < DISPLAY; i++) {
-		printf(",%5i", array[i]);
-	}
-	printf(", ... ,]\n");
+    printf("%s = [%4i", text, array[0]);
+    for (int i = 1; i < DISPLAY; i++) {
+        printf(",%5i", array[i]);
+    }
+    printf(", ... ,]\n");
 }
 #endif

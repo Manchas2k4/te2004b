@@ -3,8 +3,9 @@
 // File: example03.cpp
 // Author: Pedro Perez
 // Description: This file implements the multiplication of a matrix
-//		by a vector using C/C++ threads. To compile:
-//		g++ -o app -pthread example03.cpp
+//				by a vector. The time this implementation takes will
+//				be used as the basis to calculate the improvement
+//				obtained with parallel technologies.
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -15,28 +16,23 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <thread>
 #include "utils.h"
 
 using namespace std;
 using namespace std::chrono;
 
-#define RENS 	30000
-#define COLS 	30000
-#define THREADS std::thread::hardware_concurrency()
+#define RENS 30000
+#define COLS 30000
 
-typedef struct {
-    int *m, *b, *c;
-    int start, end;
-} Block;
+void matrix_vector(int *m, int *b, int *c) {
+    int acum;
 
-void matrix_vector(Block &b) {
-    for (int i = b.start; i < b.end; i++) {
-        int acum = 0;
+    for (int i = 0; i < RENS; i++) {
+        acum = 0;
         for (int j = 0; j < COLS; j++) {
-            acum += (b.m[(i * COLS) + j] * b.b[i]);
+            acum += (m[(i * COLS) + j] * b[i]);
         }
-        b.c[i] = acum;
+        c[i] = acum;
     }
 }
 
@@ -46,10 +42,6 @@ int main(int argc, char* argv[]) {
     // These variables are used to keep track of the execution time.
     high_resolution_clock::time_point start, end;
     double timeElapsed;
-
-    int blockSize;
-    Block blocks[THREADS];
-    thread threads[THREADS];
 
     m = new int[RENS * COLS];
     b = new int [RENS];
@@ -62,27 +54,12 @@ int main(int argc, char* argv[]) {
         b[i] = 1;
     }
 
-    blockSize = RENS / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].m = m;
-        blocks[i].b = b;
-        blocks[i].c = c;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : RENS;
-    }
-
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
-        for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(matrix_vector, std::ref(blocks[i]));
-        }
-
-        for (int i = 0; i < THREADS; i++) {
-            threads[i].join();
-        }
+        matrix_vector(m, b, c);
 
         end = high_resolution_clock::now();
         timeElapsed += 

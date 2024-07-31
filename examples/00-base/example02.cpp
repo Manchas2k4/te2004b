@@ -3,9 +3,10 @@
 // File: example02.cpp
 // Author: Pedro Perez
 // Description: This file contains the code that looks for an element 
-//		X within the array and replaces it with Y using C/C++ threads. 
-//      To compile:
-//		g++ -o app -pthread example02.cpp
+//				X within the array and replaces it with Y. The time 
+//				it takes to implement this will be used as the basis 
+//				for calculating the improvement obtained with parallel 
+//				technologies. The time this implementation takes.
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -17,24 +18,19 @@
 #include <iomanip>
 #include <chrono>
 #include <cstring>
-#include <thread>
 #include "utils.h"
 
 using namespace std;
 using namespace std::chrono;
 
-#define SIZE    1000000000 //1e9
-#define THREADS std::thread::hardware_concurrency()
+const int SIZE = 1000000000; //1e9
 
-typedef struct {
-    int *array, oldElement, newElement;
-    int start, end;
-} Block;
+void replace(int *array, int size, int x, int y) {
+    int i;
 
-void replace(Block &b) {
-    for (int i = b.start; i < b.end; i++) {
-        if (b.array[i] == b.oldElement) {
-            b.array[i] = b.newElement;
+    for (i = 0; i < size; i++) {
+        if (array[i] == x) {
+            array[i] = y;
         }
     }
 }
@@ -46,10 +42,6 @@ int main(int argc, char* argv[]) {
     high_resolution_clock::time_point start, end;
     double timeElapsed;
 
-    int blockSize;
-    Block blocks[THREADS];
-    thread threads[THREADS];
-
     array = new int[SIZE];
     for (int i = 0; i < SIZE; i++) {
         array[i] = 1;
@@ -58,15 +50,6 @@ int main(int argc, char* argv[]) {
     
     aux = new int[SIZE];
 
-    blockSize = SIZE / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].array = aux;
-        blocks[i].oldElement = 1;
-        blocks[i].newElement = -1;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
-    }
-
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
@@ -74,13 +57,7 @@ int main(int argc, char* argv[]) {
         
         start = high_resolution_clock::now();
 
-        for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(replace, std::ref(blocks[i]));
-        }
-
-        for (int i = 0; i < THREADS; i++) {
-            threads[i].join();
-        }
+        replace(aux, SIZE, 1, -1);
 
         end = high_resolution_clock::now();
         timeElapsed += 

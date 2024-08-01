@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file implements the producer-consumer
 //              synchronization problem using pthreads.
-//              To compile: g++ producer-consumer.cpp -lpthread -o app
+//              To compile: g++ -o app -pthread producer-consumer.cpp  
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -18,10 +18,14 @@
 #include <chrono>
 #include <pthread.h>
 
-const int SIZE = 10;
-const int MAXNUM = 10000;
-const int MAXPROD = 5;
-const int MAXCON = 5;
+using namespace std;
+using namespace std::chrono;
+
+#define SIZE 		10
+#define MAXPROD 	5
+#define MAXCON 		5
+#define ITERATIONS 	10
+#define SLEEPTIME	1000
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t space_available = PTHREAD_COND_INITIALIZER;
@@ -45,56 +49,60 @@ int get_buffer(){
 	return v ;
 }
 
-void* producer(void *arg) {
-	int i;
+void producer(int id) {
+	int value = id * 10;
 
-	printf("producter starting...\n");
-	i = 0;
-	while (1) {
+    cout << "Producer " << id << " starting...\n";
+	for (int i = 0; i < ITERATIONS; i++) {
 		pthread_mutex_lock(&mutex);
 		if (count == SIZE) {
 			pthread_cond_wait(&space_available, &mutex);
 		}
-		printf("producer adding %i...\n", i);
+		cout << "Producter " << id << " adding " << i << "\n";
 		add_buffer(i);
 		pthread_cond_signal(&data_available);
 		pthread_mutex_unlock(&mutex);
-		i = (i + 1) % MAXNUM;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEPTIME));
 	}
-	pthread_exit(NULL);
+	cout << "Producer " << id << " ending.\n";
 }
 
-void* consumer(void *arg) {
-	int v;
-	printf("consumer starting...\n");
-	for (int i = 0; i < 10; i++) {
+void consumer(int id) {
+	int value;
+
+	cout << "Consumer " << id << " starting...\n";
+    for (int i = 0; i < ITERATIONS; i++) {
 		pthread_mutex_lock(&mutex);
 		if (count == 0) {
 			pthread_cond_wait(&data_available, &mutex);
 		}
-		v = get_buffer();
-		printf("consumer getting %i...\n", v);
+		value = get_buffer();
+		cout << "Consumer " << id << " taking " << value << "\n";
 		pthread_cond_signal(&space_available);
 		pthread_mutex_unlock(&mutex);
 	}
-	printf("consuming finishing...\n");
-	pthread_exit(NULL);
+	cout << "Consumer " << id << " ending.\n";
 }
 
 int main(int argc, char* argv[])   {
-	pthread_t producer_thread[MAXPROD];
-	pthread_t consumer_thread[MAXCON];
+	thread producer_thread[MAXPROD];
+    thread consumer_thread[MAXCON];
 
 	for (int i = 0; i < MAXPROD; i++) {
-		pthread_create(&producer_thread[i], NULL, producer, NULL);
-	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-	for (int i = 0; i < MAXCON; i++) {
-		pthread_create(&consumer_thread[i], NULL, consumer, NULL);
-	}
-	for (int i = 0; i < MAXCON; i++) {
-		pthread_join(consumer_thread[i], NULL);
-	}
-	return 0;
+        producer_thread[i] = thread(producer, i);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+    for (int i = 0; i < MAXCON; i++) {
+        consumer_thread[i] = thread(consumer, i);
+    }
+
+    for (int i = 0; i < MAXPROD; i++) {
+        producer_thread[i].join();
+    }
+
+    for (int i = 0; i < MAXCON; i++) {
+        consumer_thread[i].join();
+    }
 }

@@ -14,20 +14,17 @@
 
 #include <iostream>
 #include <iomanip>
-#include <thread>
 #include <pthread.h>
-#include <cstdlib>
-#include <ctime>
+#include <thread>
 
 using namespace std;
 
-const int MAX_PHILOSOPHERS = 5;
-const int MAX_ITERATIONS = 5;
-const int MAX_SLEEP_TIME = 5000;
+#define MAX_PHILOSOPHERS    5
+#define MAX_ITERATIONS      5
+#define MAX_SLEEP_TIME      2000
 enum {THINKING, HUNGRY, EATING} state[MAX_PHILOSOPHERS];
 
-pthread_t tids[MAX_PHILOSOPHERS];
-int id[MAX_PHILOSOPHERS];
+thread threads[MAX_PHILOSOPHERS];
 pthread_cond_t chopsticks[MAX_PHILOSOPHERS];
 pthread_mutex_t mutex_lock;
 
@@ -45,6 +42,10 @@ void test(int i) {
         state[right(i)] != EATING) {
 
         state[i] = EATING;
+
+        cout << "Philosopher " << i << " takes fork " << left(i) 
+             << " and " << right(i) << std::endl;
+        cout << "Philosopher " << i << " is eating\n";
         pthread_cond_signal(&chopsticks[i]);
     }
 }
@@ -52,6 +53,7 @@ void test(int i) {
 void pickupChopsticks(int i) {
     pthread_mutex_lock(&mutex_lock);
     state[i] = HUNGRY;
+    cout << "Philosopher " << i << " is hungry" << std::endl;
     test(i);
     while (state[i] != EATING) {
         pthread_cond_wait(&chopsticks[i], &mutex_lock);
@@ -62,6 +64,9 @@ void pickupChopsticks(int i) {
 void returnChopsticks(int i) {
     pthread_mutex_lock(&mutex_lock);
     state[i] = THINKING;
+    cout << "Philosopher " << i << " putting fork " << left(i) 
+         << " and " << right(i) << " down" << std::endl;
+    cout << "Philosopher " << i << " is thinking" << std::endl;
     test(left(i));
     test(right(i));
     pthread_mutex_unlock(&mutex_lock);
@@ -75,43 +80,39 @@ void eating(int sleepTime) {
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
 
-void* philosopher(void *param) {
-    int id = *((int*) param);
+void philosopher(int id) {
     int sleepTime;
-    int i;
 
-    srand(time(0) + id);
     cout << "Philosopher " << id << " is starting...\n";
-    while(i < MAX_ITERATIONS) {
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
         sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
         thinking(sleepTime);
 
         pickupChopsticks(id);
-        cout << "Philosopher " << id << " is eating\n";
+        
         sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
         eating(sleepTime);
+
         returnChopsticks(id);
 
-        cout << "Philosopher " << id << " is thinking\n";
         i++;
     }
-    pthread_exit(NULL);
+    cout << "Philosopher " << id << " is ending.\n";
 }
 
 int main(int argc, char* argv[]) {
     for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
         state[i] = THINKING;
-        id[i] = i;
         pthread_cond_init(&chopsticks[i], NULL);
     }
     pthread_mutex_init(&mutex_lock, NULL);
 
     for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
-        pthread_create(&tids[i], NULL, philosopher, (void*) &id[i]);
+        threads[i] = thread(philosopher, i);
     }
 
     for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
-        pthread_join(tids[i], NULL);
+        threads[i].join();
     }
 
     return 0;

@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include <unistd.h>
+#include <thread>
 #include <pthread.h>
 #include <cstdlib>
 #include <ctime>
@@ -22,10 +22,10 @@
 
 using namespace std;
 
-const int MAX_READERS = 15;
-const int MAX_WRITERS = 5;
-const int MAX_TIMES = 5;
-const int MAX_SLEEP_TIME = 5;
+#define MAX_READERS     15
+#define MAX_WRITERS     5
+#define MAX_TIMES       5
+#define MAX_SLEEP_TIME  5
 
 int readers, writers, waitingReaders, waitingWriters;
 pthread_cond_t canRead, canWrite;
@@ -60,16 +60,14 @@ void endReading(int id) {
   pthread_mutex_unlock(&condLock);
 }
 
-void* reader(void *param) {
-  int id = *(int*) param;
-
+void reader(int id) {
   for (int i = 0; i < MAX_TIMES; i++) {
     beginReading(id);
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     endReading(id);
-    sleep((MAX_SLEEP_TIME % 5) + 1);
+    int sleepTime = (MAX_SLEEP_TIME % 5) + 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
   }
-  pthread_exit(0);
 }
 /************* CODE FOR READERS *************/
 /************* CODE FOR WRITERS *************/
@@ -101,46 +99,39 @@ void endWriting(int id) {
   pthread_mutex_unlock(&condLock);
 }
 
-void* writer(void *param) {
-  int id = *(int*) param;
-
+void writer(int id) {
   for (int i = 0; i < MAX_TIMES; i++) {
     beginWriting(id);
-    sleep(3);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     endWriting(id);
-    sleep((MAX_SLEEP_TIME % 5) + 1);
+    int sleepTime = (MAX_SLEEP_TIME % 5) + 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
   }
-  pthread_exit(0);
 }
 /************* CODE FOR WRITERS *************/
 
 int main(int argc, char* argv[]) {
   int i, j;
-  pthread_t tids[MAX_READERS + MAX_WRITERS];
-  int ids[MAX_READERS + MAX_WRITERS];
+  thread threads[MAX_READERS + MAX_WRITERS];
 
   readers = writers = waitingReaders = waitingWriters = 0;
   pthread_cond_init(&canRead, NULL);
   pthread_cond_init(&canWrite, NULL);
   pthread_mutex_init(&condLock, NULL);
 
-  for (i = 0; i < (MAX_READERS + MAX_WRITERS); i++) {
-    ids[i] = i;
-  }
-
   j = 0;
   for (i = 0; i < MAX_READERS; i++) {
-    pthread_create(&tids[j], NULL, reader, &ids[j]);
+    threads[j] = thread(reader, i);
     j++;
   }
 
   for (i = 0; i < MAX_WRITERS; i++) {
-    pthread_create(&tids[j], NULL, writer, &ids[j]);
+    threads[j] = thread(writer, i);
     j++;
   }
 
   for (i = 0; i < (MAX_READERS + MAX_WRITERS); i++) {
-     pthread_join(tids[i], NULL);
+    threads[i].join();
   }
 
 }

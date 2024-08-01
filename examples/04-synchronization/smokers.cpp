@@ -21,10 +21,11 @@
 
 using namespace std;
 
-const int MAX_TIMES = 20;
-const int TOBACCO = 0;
-const int PAPER = 1;
-const int MATCH = 2;
+#define ITER_AGENT  15
+#define ITER_SMOKE  5
+#define TOBACCO     0
+#define PAPER       1
+#define MATCH       2
 pthread_mutex_t tableLock, tobaccoLock, paperLock, matchLock;
 
 void acquire(int resource) {
@@ -51,25 +52,25 @@ string translate(int resource) {
   }
 }
 
-void* smoker(void *param) {
-  int resource = *(int*) param;
-
+void smoker(int resource) {
   cout << "The smoker with " << translate(resource)
        << " has started... waiting for other ingredients\n";
-  while (1) {
+  for (int i = 0; i < ITER_SMOKE; i++) {
     acquire(resource);
     cout << "The smoker with " << translate(resource)
          << " take what the agent left, makes a cigar and smokes it..\n";
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		pthread_mutex_unlock(&tableLock);
   }
-  pthread_exit(0);
+  cout << "The smoker with " << translate(resource)
+       << " has finished\n";
 }
 
-void* agent(void *param) {
+void agent() {
   int value;
 
-  for (int i = 0; i < MAX_TIMES; i++) {
+  cout << "The Agent is starting...\n";
+  for (int i = 0; i < ITER_AGENT; i++) {
     pthread_mutex_lock(&tableLock);
     value = (rand() % 3);
     switch (value) {
@@ -87,11 +88,11 @@ void* agent(void *param) {
 				break;
 		}
   }
-  pthread_exit(0);
+  cout << "The Agent has finished.\n";
 }
 
 int main(int argc, char* argv[]) {
-  pthread_t smokers[3], agents;
+  thread smokers[3], agents;
   int resources[] = {TOBACCO, PAPER, MATCH};
 
   pthread_mutex_init(&tableLock, NULL);
@@ -104,16 +105,16 @@ int main(int argc, char* argv[]) {
   pthread_mutex_lock(&matchLock);
 
   srand(time(0));
-
   for (int i = 0; i < 3; i++) {
-    pthread_create(&smokers[i], NULL, smoker, &resources[i]);
+    smokers[i] = thread(smoker, resources[i]);
   }
 
-  pthread_create(&agents, NULL, agent, NULL);
+  agents = thread(agent);
 
   for (int i = 0; i < 3; i++) {
-    pthread_join(agents, NULL);
+    smokers[i].join();
   }
+  agents.join();
 
   return 0;
 }

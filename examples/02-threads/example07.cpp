@@ -27,24 +27,21 @@ using namespace std::chrono;
 #define SIZE 	10000000 //1e7
 #define THREADS std::thread::hardware_concurrency()
 
-typedef struct {
-    int *A, *B, size, index, blockSize, threadsRequired;
-} Block;
-
-void merge_task(Block &b) {
+void merge_task(int *A, int *B, int size, int index,
+                int blockSize, int threadsRequired) {
     int start, mid, end, left, right, i, numberOfThreads;
 
-    while (b.index < b.size) {
-        start = b.blockSize * b.index;
-        mid = start + (b.blockSize / 2) - 1;
-        end = start + b.blockSize - 1;
+    while (index < size) {
+        start = blockSize * index;
+        mid = start + (blockSize / 2) - 1;
+        end = start + blockSize - 1;
         
         left = start;
         right = mid + 1;
         i = start;
         
-        if (end > (b.size - 1)) {
-            end = b.size - 1;
+        if (end > (size - 1)) {
+            end = size - 1;
         }
         
         if (start == end || end <= mid) {
@@ -52,29 +49,28 @@ void merge_task(Block &b) {
         }
         
         while (left <= mid && right <= end) {
-            if (b.A[left] <= b.A[right]) {
-                b.B[i++] = b.A[left++];
+            if (A[left] <= A[right]) {
+                B[i++] = A[left++];
             } else {
-                b.B[i++] = b.A[right++];
+                B[i++] = A[right++];
             }
         }
         
         while (left <= mid) {
-            b.B[i++] = b.A[left++];
+            B[i++] = A[left++];
         }
         
         while (right <= end) {
-            b.B[i++] = b.A[right++];
+            B[i++] = A[right++];
         }
 
-        b.index += b.threadsRequired;
+        index += threadsRequired;
     }
 }
 
 void parallel_merge_sort(int *array, int size) {
     int *temp, *A, *B, threadsRequired;
-    Block *blocks; //[THREADS];
-    thread *threads; //[THREADS]; 
+    thread *threads;
 
     temp = new int[size];
     memcpy(temp, array, sizeof(int) * size);
@@ -87,24 +83,16 @@ void parallel_merge_sort(int *array, int size) {
         if (size % blockSize > 0) {
             threadsRequired++;
         }
-        
-        blocks = new Block[threadsRequired];
+
         threads = new thread[threadsRequired];
         for (int i = 0; i < threadsRequired; i++) {
-            blocks[i].A = A;
-            blocks[i].B = B;
-            blocks[i].size = size;
-            blocks[i].index = i;
-            blocks[i].blockSize = blockSize;
-            blocks[i].threadsRequired = threadsRequired;
-            threads[i] = thread(merge_task, std::ref(blocks[i]));
+            threads[i] = thread(merge_task, A, B, size, i, blockSize, threadsRequired);
         }
 
         for (int i = 0; i < threadsRequired; i++) {
             threads[i].join();
         }
 
-        delete [] blocks;
         delete [] threads;
         
         A = (A == array)? temp : array;

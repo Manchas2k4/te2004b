@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <cmath>
 #include "utils.h"
 
 using namespace std;
@@ -24,14 +25,9 @@ using namespace std::chrono;
 #define SIZE    1000000000 // 1e9
 #define THREADS std::thread::hardware_concurrency()
 
-typedef struct {
-    int *c, *a, *b;
-    int start, end;
-} Block;
-
-void add_vectors(Block &b) {
-    for (int i = b.start; i < b.end; i++) {
-        b.c[i] = b.a[i] + b.b[i];
+void add_vectors(int start, int end, int *a, int *b, int *c) {
+    for (int i = start; i < end; i++) {
+        c[i] = a[i] + b[i];
     }
 }
 
@@ -43,7 +39,6 @@ int main(int argc, char* argv[]) {
     double timeElapsed;
 
     int blockSize;
-    Block blocks[THREADS];
     thread threads[THREADS];
 
     a = new int [SIZE];
@@ -55,22 +50,17 @@ int main(int argc, char* argv[]) {
     fill_array(b, SIZE);
     display_array("b:", b);
 
-    blockSize = SIZE / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].c = c;
-        blocks[i].a = a;
-        blocks[i].b = b;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
-    }
-
+    blockSize = ceil((double) SIZE / THREADS);
+    
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
         for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(add_vectors, std::ref(blocks[i]));
+            int start = (i * blockSize);
+            int end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
+            threads[i] = thread(add_vectors, start, end, a, b, c);
         }
 
         for (int i = 0; i < THREADS; i++) {

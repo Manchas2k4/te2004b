@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <cmath>
 #include "utils.h"
 
 using namespace std;
@@ -25,18 +26,13 @@ using namespace std::chrono;
 #define COLS 	30000
 #define THREADS std::thread::hardware_concurrency()
 
-typedef struct {
-    int *m, *b, *c;
-    int start, end;
-} Block;
-
-void matrix_vector(Block &b) {
-    for (int i = b.start; i < b.end; i++) {
+void matrix_vector(int start, int end, int *m, int *b, int *c) {
+    for (int i = start; i < end; i++) {
         int acum = 0;
         for (int j = 0; j < COLS; j++) {
-            acum += (b.m[(i * COLS) + j] * b.b[i]);
+            acum += (m[(i * COLS) + j] * b[i]);
         }
-        b.c[i] = acum;
+        c[i] = acum;
     }
 }
 
@@ -48,7 +44,6 @@ int main(int argc, char* argv[]) {
     double timeElapsed;
 
     int blockSize;
-    Block blocks[THREADS];
     thread threads[THREADS];
 
     m = new int[RENS * COLS];
@@ -62,14 +57,7 @@ int main(int argc, char* argv[]) {
         b[i] = 1;
     }
 
-    blockSize = RENS / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].m = m;
-        blocks[i].b = b;
-        blocks[i].c = c;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : RENS;
-    }
+    blockSize = ceil((double) RENS / THREADS);
 
     cout << "Starting...\n";
     timeElapsed = 0;
@@ -77,7 +65,9 @@ int main(int argc, char* argv[]) {
         start = high_resolution_clock::now();
 
         for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(matrix_vector, std::ref(blocks[i]));
+            int start = (i * blockSize);
+            int end = (i != (THREADS - 1))? ((i + 1) * blockSize) : RENS;
+            threads[i] = thread(matrix_vector, start, end, m, b, c);
         }
 
         for (int i = 0; i < THREADS; i++) {

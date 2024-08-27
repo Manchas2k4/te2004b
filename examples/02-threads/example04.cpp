@@ -17,6 +17,8 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <cmath>
+#include <cstring>
 #include "utils.h"
 
 using namespace std;
@@ -25,19 +27,14 @@ using namespace std::chrono;
 #define SIZE 	1000000000 // 1e9
 #define THREADS std::thread::hardware_concurrency()
 
-typedef struct {
-    int *array, result;
-    int start, end;
-} Block;
-
-void minimum(Block &b) {
-    int local = b.array[b.start];
-    for (int i = b.start + 1; i < b.end; i++) {
-        if (b.array[i] < local) {
-            local = b.array[i];
+void minimum(int start, int end, int *array, int &result) {
+    int local = array[start];
+    for (int i = start + 1; i < end; i++) {
+        if (array[i] < local) {
+            local = array[i];
         }
     }
-    b.result = local;
+    result = local;
 }
 
 int main(int argc, char* argv[]) {
@@ -48,7 +45,7 @@ int main(int argc, char* argv[]) {
     double timeElapsed;
 
     int blockSize;
-    Block blocks[THREADS];
+    int results[THREADS];
     thread threads[THREADS];
 
     array = new int [SIZE];
@@ -56,28 +53,26 @@ int main(int argc, char* argv[]) {
     random_array(array, SIZE);
     display_array("array:", array);
 
-    blockSize = SIZE / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].array = array;
-        blocks[i].result = 0;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
-    }
+    memset(results, 0, sizeof(int) * THREADS);
 
+    blockSize = ceil((double) SIZE / THREADS);
+    
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
         for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(minimum, std::ref(blocks[i]));
+            int start = (i * blockSize);
+            int end = (i != (THREADS - 1))? ((i + 1) * blockSize) : SIZE;
+            threads[i] = thread(minimum, start, end, array, std::ref(results[i]));
         }
 
         result = array[0];
         for (int i = 0; i < THREADS; i++) {
             threads[i].join();
-            if (blocks[i].result < result) {
-                result = blocks[i].result;
+            if (results[i] < result) {
+                result = results[i];
             }
         }
 

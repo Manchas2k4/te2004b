@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstring>
 #include <thread>
 #include "utils.h"
 
@@ -28,22 +29,18 @@ using namespace std::chrono;
 #define RECTS 	1000000000 //1e9
 #define THREADS std::thread::hardware_concurrency()
 
-double square(double x) {
-    return x * x;
+double non_overloaded_sin(double x) {
+    return sin(x);
 }
 
-typedef struct {
-    double x, dx, result;
-    double (*fn) (double);
-    int start, end;
-} Block;
-
-void integration(Block &b) {
+void integration(int start, int end, 
+                 double x, double dx, double (*fn) (double),
+                 double &result) {
     double acum = 0;
-    for (int i = b.start; i < b.end; i++) {
-        acum += b.fn(b.x + (i * b.dx));
+    for (int i = start; i < end; i++) {
+        acum += fn(x + (i * dx));
     }
-    b.result = acum;
+    result = acum;
 }
 
 int main(int argc, char* argv[]) {
@@ -54,21 +51,15 @@ int main(int argc, char* argv[]) {
     double timeElapsed;
 
     int blockSize;
-    Block blocks[THREADS];
+    double results[THREADS];
     thread threads[THREADS];
+
+    memset(results, 0, sizeof(double) * THREADS);
 
     x = 0;
     dx = PI / RECTS;
+    blockSize = ceil((double) RECTS / THREADS);
 
-    blockSize = RECTS / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].x = x;
-        blocks[i].dx = dx;
-        blocks[i].fn = sin;
-        blocks[i].result = 0;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) : RECTS;
-    }	
 
     cout << "Starting...\n";
     timeElapsed = 0;
@@ -76,13 +67,17 @@ int main(int argc, char* argv[]) {
         start = high_resolution_clock::now();
 
         for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(integration, std::ref(blocks[i]));
+            int start = (i * blockSize);
+            int end = (i != (THREADS - 1))? ((i + 1) * blockSize) : RECTS;
+            threads[i] = thread(integration, start, end,
+                                x, dx, non_overloaded_sin, 
+                                std::ref(results[i]));
         }
 
         acum = 0;
         for (int i = 0; i < THREADS; i++) {
             threads[i].join();
-            acum += blocks[i].result;
+            acum += results[i];
         }
 
         end = high_resolution_clock::now();

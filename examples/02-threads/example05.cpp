@@ -20,6 +20,8 @@
 #include <chrono>
 #include <random>
 #include <thread>
+#include <cmath>
+#include <cstring>
 #include "utils.h"
 
 using namespace std;
@@ -29,16 +31,12 @@ using namespace std::chrono;
 #define NUMBER_OF_POINTS 	(INTERVAL * INTERVAL) // 1e8
 #define THREADS             std::thread::hardware_concurrency()
 
-typedef struct {
-    int start, end, count;
-} Block;
-
-void aprox_pi(Block &b) {
+void aprox_pi(int start, int end, int &count) {
     default_random_engine generator;
     uniform_real_distribution<double> distribution(0.0, 1.0);
 
     int local = 0;
-    for (int i = b.start; i < b.end; i++) {
+    for (int i = start; i < end; i++) {
         double x = (distribution(generator) * 2) - 1;
         double y = (distribution(generator) * 2) - 1;
         double dist = (x * x) + (y * y);
@@ -46,7 +44,7 @@ void aprox_pi(Block &b) {
             local++;
         }
     }
-    b.count = local;
+    count = local;
 }
 
 int main(int argc, char* argv[]) {
@@ -58,16 +56,12 @@ int main(int argc, char* argv[]) {
     double timeElapsed;
 
     int blockSize;
-    Block blocks[THREADS];
+    int counts[THREADS];
     thread threads[THREADS];
 
-    blockSize = NUMBER_OF_POINTS / THREADS;
-    for (int i = 0; i < THREADS; i++) {
-        blocks[i].count = 0;
-        blocks[i].start = (i * blockSize);
-        blocks[i].end = (i != (THREADS - 1))? ((i + 1) * blockSize) 
-                        : NUMBER_OF_POINTS;
-    }
+    memset(counts, 0, sizeof(int) * THREADS);
+
+    blockSize = ceil((double) NUMBER_OF_POINTS / THREADS);
 
     cout << "Starting...\n";
     timeElapsed = 0;
@@ -75,13 +69,15 @@ int main(int argc, char* argv[]) {
         start = high_resolution_clock::now();
 
         for (int i = 0; i < THREADS; i++) {
-            threads[i] = thread(aprox_pi, std::ref(blocks[i]));
+            int start = (i * blockSize);
+            int end = (i != (THREADS - 1))? ((i + 1) * blockSize) : NUMBER_OF_POINTS;
+            threads[i] = thread(aprox_pi, start, end, std::ref(counts[i]));
         }
 
         count = 0;
         for (int i = 0; i < THREADS; i++) {
             threads[i].join();
-            count += blocks[i].count;
+            count += counts[i];
         }
 
         end = high_resolution_clock::now();

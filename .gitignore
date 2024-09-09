@@ -38,6 +38,8 @@ app
 .__pycache__
 ehthumbs.db
 Thumbs.db
+.vscode
+.vscode?
 
 # Test file generated #
 #######################

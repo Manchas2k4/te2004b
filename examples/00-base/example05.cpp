@@ -19,8 +19,7 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <cstdlib>
-#include <ctime>
+#include <random>
 #include "utils.h"
 
 using namespace std;
@@ -29,16 +28,22 @@ using namespace std::chrono;
 #define INTERVAL 		 10000//1e4
 #define NUMBER_OF_POINTS (INTERVAL * INTERVAL) // 1e8
 
+// =================================================================
+// Returns the approximation of Pi using the Monte-Carlo method.
+//
+// @param numberOfPoints, the number of point to be generated.
+// @return the aproximation of Pi.
+// =================================================================
 double aprox_pi(int numberOfPoints) {
-    double x, y, dist;
+    default_random_engine generator;
+    uniform_real_distribution<double> distribution(0.0, 1.0);
     int count;
 
-    srand(time(0));
     count = 0;
     for (int i = 0; i < numberOfPoints; i++) {
-        x = double(rand() % (INTERVAL + 1)) / ((double) INTERVAL);
-        y = double(rand() % (INTERVAL + 1)) / ((double) INTERVAL);
-        dist = (x * x) + (y * y);
+        double x = (distribution(generator) * 2) - 1;
+        double y = (distribution(generator) * 2) - 1;
+        double dist = (x * x) + (y * y);
         if (dist <= 1) {
             count++;
         }
@@ -53,17 +58,26 @@ int main(int argc, char* argv[]) {
     high_resolution_clock::time_point start, end;
     double timeElapsed;
 
+    // We execute the task at least 10 times (N). It is necessary 
+    // to do so, since it allows us to reduce the impact of the 
+    // load on the operating system at the time of execution.
     cout << "Starting...\n";
     timeElapsed = 0;
     for (int j = 0; j < N; j++) {
+        // We take a clock record before execution.
         start = high_resolution_clock::now();
 
+        // We perform the task.
         result = aprox_pi(NUMBER_OF_POINTS);
 
+        // We take a clock record after execution. We calculate the 
+        // difference between the two records. This difference is 
+        // the time it took to execute the task.
         end = high_resolution_clock::now();
         timeElapsed += 
             duration<double, std::milli>(end - start).count();
     }
+    // We display the result and the average execution time.
     cout << "result = " << fixed << setprecision(20)  << result << "\n";
     cout << "avg time = " << fixed << setprecision(3) 
          << (timeElapsed / N) <<  " ms\n";

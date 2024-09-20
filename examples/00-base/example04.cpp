@@ -67,10 +67,7 @@ int main(int argc, char* argv[]) {
 
         // We perform the task and keep the result.
         result = minimum(array, SIZE);
-
-        // We take a clock record after execution. We calculate the 
-        // difference between the two records. This difference is 
-        // the time it took to execute the task.
+        
         end = high_resolution_clock::now();
         timeElapsed += 
             duration<double, std::milli>(end - start).count();

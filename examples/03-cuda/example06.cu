@@ -42,7 +42,7 @@ __global__ void integration(double *x, double *dx, double *results) {
     double acum = 0;
     while (tid < RECTS) {
         acum += sin( (*x) + (tid * (*dx)) );
-        tid += blockDim.x * gridDim.x;
+        tid += (blockDim.x * gridDim.x);
     }
 
     cache[cacheIndex] = acum;

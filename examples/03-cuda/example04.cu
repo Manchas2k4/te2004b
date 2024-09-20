@@ -46,7 +46,7 @@ __global__ void minimum(int *array, int *results) {
     while (tid < SIZE) {
         aux = minimum(aux, array[tid]);
         
-        tid += blockDim.x * gridDim.x;
+        tid += (blockDim.x * gridDim.x);
     }
 
     cache[cacheIndex] = aux;

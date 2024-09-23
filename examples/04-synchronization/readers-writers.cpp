@@ -15,49 +15,39 @@
 #include <iostream>
 #include <iomanip>
 #include <thread>
-#include <pthread.h>
-#include <cstdlib>
-#include <ctime>
-#include <sys/time.h>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
 
-#define MAX_READERS     15
-#define MAX_WRITERS     5
+#define MAX_READERS     5
+#define MAX_WRITERS     2
 #define MAX_TIMES       5
-#define MAX_SLEEP_TIME  5
 
-int readers, writers, waitingReaders, waitingWriters;
-pthread_cond_t canRead, canWrite;
-pthread_mutex_t condLock;
+mutex mtx;
+condition_variable cond_var;
+
+int readers;
+bool writer_active;
 
 /************* CODE FOR READERS *************/
 void beginReading(int id) {
-  pthread_mutex_lock(&condLock);
+  unique_lock<mutex> lock(mtx);
+  
   cout << "Reader " << id << " is waiting to read\n";
-  if (writers == 1 || waitingWriters > 0) {
-    waitingReaders++;
-    pthread_cond_wait(&canRead, &condLock);
-    waitingReaders--;
-  }
+  cond_var.wait(lock, [] () { return writer_active == false; });
 
-  /****** CRITICAL SECTION ******/
   readers++;
   cout << "Reader " << id << " is now reading\n";
-  pthread_mutex_unlock(&condLock);
-  pthread_cond_broadcast(&canRead);
-  /****** CRITICAL SECTION ******/
 }
 
 void endReading(int id) {
-  pthread_mutex_lock(&condLock);
+  unique_lock<mutex> lock(mtx);
 
   readers--;
   if (readers == 0) {
-    pthread_cond_signal(&canWrite);
+    cond_var.notify_all();
   }
-  cout << "Reader " << id << " has finished reading\n";
-  pthread_mutex_unlock(&condLock);
 }
 
 void reader(int id) {
@@ -65,38 +55,25 @@ void reader(int id) {
     beginReading(id);
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     endReading(id);
-    int sleepTime = (MAX_SLEEP_TIME % 5) + 1;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 }
 /************* CODE FOR READERS *************/
+
+
 /************* CODE FOR WRITERS *************/
 void beginWriting(int id) {
-  pthread_mutex_lock(&condLock);
-  cout << "Writer " << id << " is waiting to write\n";
-  if (writers == 1 || readers > 0) {
-    waitingWriters++;
-    pthread_cond_wait(&canWrite, &condLock);
-    waitingWriters--;
-  }
+  unique_lock<std::mutex> lock(mtx);
+  cond_var.wait(lock, [] () { return (writer_active == false) && (readers == 0); });
 
-  /****** CRITICAL SECTION ******/
-  writers = 1;
+  writer_active = true;
   cout << "Writer " << id << " is writing\n";
-  pthread_mutex_unlock(&condLock);
-  /****** CRITICAL SECTION ******/
 }
 
 void endWriting(int id) {
-  pthread_mutex_lock(&condLock);
-  writers = 0;
-
-  if (waitingReaders > 0) {
-    pthread_cond_signal(&canRead);
-  } else {
-    pthread_cond_signal(&canWrite);
-  }
-  pthread_mutex_unlock(&condLock);
+  unique_lock<std::mutex> lock(mtx);
+  writer_active = false;
+  cond_var.notify_all();
 }
 
 void writer(int id) {
@@ -104,33 +81,30 @@ void writer(int id) {
     beginWriting(id);
     std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     endWriting(id);
-    int sleepTime = (MAX_SLEEP_TIME % 5) + 1;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
   }
 }
 /************* CODE FOR WRITERS *************/
 
 int main(int argc, char* argv[]) {
-  int i, j;
+  int j;
   thread threads[MAX_READERS + MAX_WRITERS];
 
-  readers = writers = waitingReaders = waitingWriters = 0;
-  pthread_cond_init(&canRead, NULL);
-  pthread_cond_init(&canWrite, NULL);
-  pthread_mutex_init(&condLock, NULL);
+  readers = 0;
+  writer_active = false;
 
   j = 0;
-  for (i = 0; i < MAX_READERS; i++) {
+  for (int i = 0; i < MAX_READERS; i++) {
     threads[j] = thread(reader, i);
     j++;
   }
 
-  for (i = 0; i < MAX_WRITERS; i++) {
+  for (int i = 0; i < MAX_WRITERS; i++) {
     threads[j] = thread(writer, i);
     j++;
   }
 
-  for (i = 0; i < (MAX_READERS + MAX_WRITERS); i++) {
+  for (int i = 0; i < (MAX_READERS + MAX_WRITERS); i++) {
     threads[i].join();
   }
 

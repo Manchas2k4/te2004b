@@ -14,33 +14,34 @@
 
 #include <iostream>
 #include <iomanip>
+#include <random>
 #include <thread>
-#include <pthread.h>
-#include <cstdlib>
-#include <ctime>
+#include <mutex>
 
 using namespace std;
 
-#define ITER_AGENT  15
-#define ITER_SMOKE  5
 #define TOBACCO     0
 #define PAPER       1
 #define MATCH       2
-pthread_mutex_t tableLock, tobaccoLock, paperLock, matchLock;
+
+bool finished;
+default_random_engine generator;
+uniform_int_distribution<int> distribution(0, 2);
+mutex mtx, tableLock, tobaccoLock, paperLock, matchLock;
 
 void acquire(int resource) {
   switch (resource) {
-    case TOBACCO : pthread_mutex_lock(&tobaccoLock); break;
-    case PAPER   : pthread_mutex_lock(&paperLock); break;
-    default      : pthread_mutex_lock(&matchLock); break;
+    case TOBACCO : tobaccoLock.lock(); break;
+    case PAPER   : paperLock.lock(); break;
+    default      : matchLock.lock(); break;
   }
 }
 
 void release(int resource) {
   switch (resource) {
-    case TOBACCO : pthread_mutex_unlock(&tobaccoLock); break;
-    case PAPER   : pthread_mutex_unlock(&paperLock); break;
-    default      : pthread_mutex_unlock(&matchLock); break;
+    case TOBACCO : tobaccoLock.unlock(); break;
+    case PAPER   : paperLock.unlock(); break;
+    default      : matchLock.unlock(); break;
   }
 }
 
@@ -55,12 +56,12 @@ string translate(int resource) {
 void smoker(int resource) {
   cout << "The smoker with " << translate(resource)
        << " has started... waiting for other ingredients\n";
-  for (int i = 0; i < ITER_SMOKE; i++) {
+  while(!finished) {
     acquire(resource);
     cout << "The smoker with " << translate(resource)
          << " take what the agent left, makes a cigar and smokes it..\n";
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		pthread_mutex_unlock(&tableLock);
+		tableLock.unlock();
   }
   cout << "The smoker with " << translate(resource)
        << " has finished\n";
@@ -70,9 +71,9 @@ void agent() {
   int value;
 
   cout << "The Agent is starting...\n";
-  for (int i = 0; i < ITER_AGENT; i++) {
-    pthread_mutex_lock(&tableLock);
-    value = (rand() % 3);
+  while (!finished) {
+    tableLock.lock();
+    value = distribution(generator);
     switch (value) {
 		 case TOBACCO:
 				cout << "Agent is placing paper and match.\n";
@@ -95,14 +96,11 @@ int main(int argc, char* argv[]) {
   thread smokers[3], agents;
   int resources[] = {TOBACCO, PAPER, MATCH};
 
-  pthread_mutex_init(&tableLock, NULL);
-  pthread_mutex_init(&tobaccoLock, NULL);
-  pthread_mutex_init(&paperLock, NULL);
-  pthread_mutex_init(&matchLock, NULL);
+  finished = false;
 
-  pthread_mutex_lock(&tobaccoLock);
-  pthread_mutex_lock(&paperLock);
-  pthread_mutex_lock(&matchLock);
+  tobaccoLock.lock();
+  paperLock.lock();
+  matchLock.lock();
 
   srand(time(0));
   for (int i = 0; i < 3; i++) {
@@ -110,6 +108,14 @@ int main(int argc, char* argv[]) {
   }
 
   agents = thread(agent);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+  {
+		lock_guard<std::mutex> lock(mtx);
+		finished = true;
+		cout << "Finish them!!\n";
+	}
 
   for (int i = 0; i < 3; i++) {
     smokers[i].join();

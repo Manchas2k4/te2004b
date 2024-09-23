@@ -14,106 +14,90 @@
 
 #include <iostream>
 #include <iomanip>
-#include <pthread.h>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
 
-#define MAX_PHILOSOPHERS    5
-#define MAX_ITERATIONS      5
-#define MAX_SLEEP_TIME      2000
-enum {THINKING, HUNGRY, EATING} state[MAX_PHILOSOPHERS];
+#define PHILOSOPHERS    5
+#define SLEEP           1000
 
-thread threads[MAX_PHILOSOPHERS];
-pthread_cond_t chopsticks[MAX_PHILOSOPHERS];
-pthread_mutex_t mutex_lock;
+enum {THINKING, HUNGRY, EATING} state[PHILOSOPHERS];
+mutex chopsticks[PHILOSOPHERS];
+thread threads[PHILOSOPHERS];
+mutex mtx;
+condition_variable cond_var;
+bool finished;
 
 int left(int i) {
-    return (i == 0)? (MAX_PHILOSOPHERS - 1) : (i - 1);
+    return ((i + (PHILOSOPHERS - 1)) % PHILOSOPHERS);
 }
 
 int right(int i) {
-    return (i == MAX_PHILOSOPHERS - 1)? 0 : (i + 1);
+    return ((i + 1) % PHILOSOPHERS);
 }
 
-void test(int i) {
-    if (state[i] == HUNGRY &&
+bool can_eat(int i) {
+    return (state[i] == HUNGRY &&
         state[left(i)] != EATING &&
-        state[right(i)] != EATING) {
+        state[right(i)] != EATING);
+}
+
+void philosopher(int i) {
+    cout << "Philosopher " << i << " is starting...\n";
+    while (!finished) {
+        unique_lock<std::mutex> lock(mtx);
+
+        state[i] = HUNGRY;
+        cout << "Philosopher " << i << " is hungry" << std::endl;
+        cond_var.wait(lock, [i]() { return can_eat(i); });
 
         state[i] = EATING;
-
         cout << "Philosopher " << i << " takes fork " << left(i) 
-             << " and " << right(i) << std::endl;
+                << " and " << right(i) << std::endl;
+
+        lock.unlock();
+
         cout << "Philosopher " << i << " is eating\n";
-        pthread_cond_signal(&chopsticks[i]);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        lock.lock();
+
+        state[i] = THINKING;
+        cout << "Philosopher " << i << " putting fork " << left(i) 
+            << " and " << right(i) << " down" << std::endl;
+
+        cout << "Philosopher " << i << " is thinking" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        cond_var.notify_all();
     }
-}
-
-void pickupChopsticks(int i) {
-    pthread_mutex_lock(&mutex_lock);
-    state[i] = HUNGRY;
-    cout << "Philosopher " << i << " is hungry" << std::endl;
-    test(i);
-    while (state[i] != EATING) {
-        pthread_cond_wait(&chopsticks[i], &mutex_lock);
-    }
-    pthread_mutex_unlock(&mutex_lock);
-}
-
-void returnChopsticks(int i) {
-    pthread_mutex_lock(&mutex_lock);
-    state[i] = THINKING;
-    cout << "Philosopher " << i << " putting fork " << left(i) 
-         << " and " << right(i) << " down" << std::endl;
-    cout << "Philosopher " << i << " is thinking" << std::endl;
-    test(left(i));
-    test(right(i));
-    pthread_mutex_unlock(&mutex_lock);
-}
-
-void thinking(int sleepTime) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
-}
-
-void eating(int sleepTime) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
-}
-
-void philosopher(int id) {
-    int sleepTime;
-
-    cout << "Philosopher " << id << " is starting...\n";
-    for (int i = 0; i < MAX_ITERATIONS; i++) {
-        sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
-        thinking(sleepTime);
-
-        pickupChopsticks(id);
-        
-        sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
-        eating(sleepTime);
-
-        returnChopsticks(id);
-
-        i++;
-    }
-    cout << "Philosopher " << id << " is ending.\n";
+    cout << "Philosopher " << i << " is ending.\n";
 }
 
 int main(int argc, char* argv[]) {
-    for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
-        state[i] = THINKING;
-        pthread_cond_init(&chopsticks[i], NULL);
-    }
-    pthread_mutex_init(&mutex_lock, NULL);
+    finished = false;
 
-    for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
+    for (int i = 0; i < PHILOSOPHERS; i++) {
+        state[i] = THINKING;
+    }
+    
+    for (int i = 0; i < PHILOSOPHERS; i++) {
         threads[i] = thread(philosopher, i);
     }
 
-    for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
-        threads[i].join();
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+    {
+		lock_guard<std::mutex> lock(mtx);
+		finished = true;
+		cout << "Finish them!!\n";
+	}
+
+	for (int i = 0; i < PHILOSOPHERS; i++) {
+		threads[i].join();
+	}
 
     return 0;
 }

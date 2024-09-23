@@ -14,95 +14,92 @@
 
 #include <iostream>
 #include <iomanip>
+#include <queue>
 #include <thread>
 #include <chrono>
-#include <pthread.h>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
 using namespace std::chrono;
 
-#define SIZE 		10
-#define MAXPROD 	5
-#define MAXCON 		5
-#define ITERATIONS 	10
-#define SLEEPTIME	1000
+#define SIZE 	10
+#define N		5
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t space_available = PTHREAD_COND_INITIALIZER;
-pthread_cond_t data_available = PTHREAD_COND_INITIALIZER;
-
-int b[SIZE];
-int count = 0;
-int front = 0, rear = 0;
-
-void add_buffer(int i) {
-	b[rear] = i;
-	rear = (rear + 1) % SIZE;
-	count++;
-}
-
-int get_buffer(){
-	int v;
-	v = b[front];
-	front = (front + 1) % SIZE;
-	count--;
-	return v ;
-}
+mutex mtx;
+condition_variable not_empty;
+condition_variable not_full;
+queue<int> buffer;
+bool finished;
 
 void producer(int id) {
-	int value = id * 10;
+    while(!finished) {
+		unique_lock<mutex> lock(mtx);
 
-    cout << "Producer " << id << " starting...\n";
-	for (int i = 0; i < ITERATIONS; i++) {
-		pthread_mutex_lock(&mutex);
-		if (count == SIZE) {
-			pthread_cond_wait(&space_available, &mutex);
-		}
-		cout << "Producter " << id << " adding " << i << "\n";
-		add_buffer(i);
-		pthread_cond_signal(&data_available);
-		pthread_mutex_unlock(&mutex);
-		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEPTIME));
+		not_full.wait(lock, [] () { return buffer.size() != SIZE; });
+
+		cout << "\tBuffer size before producing " << buffer.size() << "\n";
+		buffer.push(id);
+		cout << "\tProducer " << id << " adding " << (id * 10) << "\n";
+		cout << "\tBuffer size after producing " << buffer.size() << "\n\n";
+
+		lock.unlock();
+
+		not_empty.notify_one();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
-	cout << "Producer " << id << " ending.\n";
 }
 
 void consumer(int id) {
 	int value;
 
-	cout << "Consumer " << id << " starting...\n";
-    for (int i = 0; i < ITERATIONS; i++) {
-		pthread_mutex_lock(&mutex);
-		if (count == 0) {
-			pthread_cond_wait(&data_available, &mutex);
-		}
-		value = get_buffer();
-		cout << "Consumer " << id << " taking " << value << "\n";
-		pthread_cond_signal(&space_available);
-		pthread_mutex_unlock(&mutex);
+	while (!finished) {
+		unique_lock<mutex> lock(mtx);
+
+		not_empty.wait(lock, [] ()  { return buffer.size() != 0; });
+
+		cout << "Buffer size before consuming " << buffer.size() << "\n";
+		int val = buffer.front(); buffer.pop();
+		cout << "Consumer " << id << " taking " << (id * 10) << "\n";
+		cout << "Buffer size after consuming " << buffer.size() << "\n\n";
+
+		lock.unlock();
+
+		not_full.notify_one();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
-	cout << "Consumer " << id << " ending.\n";
 }
 
 int main(int argc, char* argv[])   {
-	thread producer_thread[MAXPROD];
-    thread consumer_thread[MAXCON];
+	thread producer_thread[N];
+    thread consumer_thread[N];
 
-	for (int i = 0; i < MAXPROD; i++) {
-        producer_thread[i] = thread(producer, i);
+	finished = false;
+
+	for (int i = 0; i < N; i++) {
+        producer_thread[i] = thread(producer, (i + 1));
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-    for (int i = 0; i < MAXCON; i++) {
-        consumer_thread[i] = thread(consumer, i);
+    for (int i = 0; i < N; i++) {
+        consumer_thread[i] = thread(consumer, (i + 1));
     }
 
-    for (int i = 0; i < MAXPROD; i++) {
-        producer_thread[i].join();
-    }
+	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+	
+	{
+		lock_guard<std::mutex> lock(mtx);
+		finished = true;
+		cout << "Finish them!!\n";
+	}
 
-    for (int i = 0; i < MAXCON; i++) {
-        consumer_thread[i].join();
-    }
+	for (int i = 0; i < N; i++) {
+		producer_thread[i].join();
+		consumer_thread[i].join();
+	}
+
+	return 0;
 }

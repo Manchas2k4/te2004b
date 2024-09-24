@@ -1,6 +1,6 @@
 // =================================================================
 //
-// File: example01b.cpp
+// File: example01a.cpp
 // Author: Pedro Perez
 // Description: This file implements the addition of two vectors. 
 //				The time this implementation takes will be used as 
@@ -25,7 +25,7 @@ using namespace std::chrono;
 #define SIZE 1000000000 // 1e9
 
 __global__ void add_vector(int *result, int *a, int *b) {
-    result[threadIdx.x] = a[threadIdx.x] + b[threadIdx.x];
+    result[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
 }
 
 int main(int argc, char* argv[]) {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
-        add_vector<<<1, SIZE>>>(deviceC, deviceA, deviceB);
+        add_vector<<<SIZE, 1>>>(deviceC, deviceA, deviceB);
 
         end = high_resolution_clock::now();
         timeElapsed += 

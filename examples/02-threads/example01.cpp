@@ -54,6 +54,8 @@ int main(int argc, char* argv[]) {
     b = new int [SIZE];
     c = new int [SIZE];
 
+    cout << "Threads = " << THREADS << "\n";
+
     // We fill the arrays A and B with incremental values ​​between 1 
     // and TOP_VALUE
     fill_array(a, SIZE);

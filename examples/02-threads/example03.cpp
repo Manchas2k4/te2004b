@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 
     // We calculate the block size that is assigned to each thread 
     // by dividing the task size by the number of threads.
-    int blockSize = ceil((double) SIZE / THREADS);
+    int blockSize = ceil((double) RENS / THREADS);
     thread threads[THREADS];
 
     // We execute the task at least 10 times (N). It is necessary 

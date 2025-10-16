@@ -3,7 +3,7 @@
 // File: intro02.cu
 // Author: Pedro Perez
 // Description: This file shows some of the basic CUDA directives.
-//		        To compile: nvcc -o app intro02.cu
+//		        To compile: !nvcc -arch=sm_75 -o app intro02.cu
 //
 // Copyright (c) 2023 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

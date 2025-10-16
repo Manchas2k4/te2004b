@@ -5,7 +5,7 @@
 // Description: This file contains the code that searches for the
 // 				smallest value stored in an array using CUDA. To 
 //              compile:
-//		        nvcc -o app example04.cu
+//		        !nvcc -arch=sm_75 -o app example04.cu
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -46,7 +46,7 @@ __global__ void minimum(int *array, int *results) {
     while (tid < SIZE) {
         aux = minimum(aux, array[tid]);
         
-        tid += (blockDim.x * gridDim.x);
+        tid += blockDim.x * gridDim.x;
     }
 
     cache[cacheIndex] = aux;

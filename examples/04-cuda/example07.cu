@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file implements the merge sort algorithm using 
 //				CUDA technology. To compile:
-//		        nvcc -o app example07.cu
+//		        !nvcc -arch=sm_75 -o app example07.cu
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

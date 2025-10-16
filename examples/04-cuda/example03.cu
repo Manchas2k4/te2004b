@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file implements the multiplication of a matrix
 //				by a vector using CUDA. To compile
-//		        nvcc -o app example03.cu
+//		        !nvcc -arch=sm_75 -o app example03.cu
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

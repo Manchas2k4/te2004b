@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file contains the approximation of Pi using the 
 //				Monte-Carlo method using CUDA. To compile
-//		        nvcc -o app example05.cu
+//		        !nvcc -arch=sm_75 -o app example05.cu
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial

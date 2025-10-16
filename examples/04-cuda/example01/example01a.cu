@@ -1,11 +1,11 @@
 // =================================================================
 //
-// File: example01c.cpp
+// File: example01a.cu
 // Author: Pedro Perez
-// Description: This file implements the addition of two vectors. 
-//				The time this implementation takes will be used as 
-//				the basis to calculate the improvement obtained with 
-//				parallel technologies.
+// Description: This file implements the addition of two vectors 
+//				using CUDA.
+//              To compile:
+//		        !nvcc -arch=sm_75 -o app example1a.cu
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -16,23 +16,16 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono>
-#include <algorithm>
 #include <cuda_runtime.h>
 #include "utils.h"
 
 using namespace std;
 using namespace std::chrono;
 
-#define SIZE 	1000000000 // 1e9
-#define THREADS 512
-#define BLOCKS	min(4, ((SIZE / THREADS) + 1))
+#define SIZE 1000000000 // 1e9
 
 __global__ void add_vector(int *result, int *a, int *b) {
-    int index = threadIdx.x + (blockIdx.x * blockDim.x);
-    while (index < SIZE) {
-        result[index] = a[index] + b[index];
-        index += (blockDim.x * gridDim.x);
-    }
+    result[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
 }
 
 int main(int argc, char* argv[]) {
@@ -64,7 +57,7 @@ int main(int argc, char* argv[]) {
     for (int j = 0; j < N; j++) {
         start = high_resolution_clock::now();
 
-        add_vector<<<BLOCKS, THREADS>>>(deviceC, deviceA, deviceB);
+        add_vector<<<SIZE, 1>>>(deviceC, deviceA, deviceB);
 
         end = high_resolution_clock::now();
         timeElapsed += 

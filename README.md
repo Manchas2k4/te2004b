@@ -13,7 +13,7 @@ This is an intermediate level course in electronic engineering focused on applic
 | August 18       | Investigation 2: Parallelism and Concurrency. |
 | August 25       | Investigation 3: Shared-memory architectures. |
 | September 1     | Investigation 4: Processes and Threads. |
-| September 8     | Synchronization 1: Definition and classic examples. |
+| September 8     | Synchronization: Definition and classic examples. |
 | September 22    | Threads 1: Introduction and Parallel For. |
 | September 29    | Threads 2: Parallel Reduce and exercise. |
 | October 6       | CUDA 1: Introduction and Parallel For                       |

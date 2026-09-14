@@ -27,18 +27,23 @@ using namespace std::chrono;
 #define SIZE 	10000000 //1e7
 #define THREADS std::thread::hardware_concurrency()
 
-void merge_task(int *A, int *B, int size, int index,
-                int blockSize, int threadsRequired) {
-    int start, mid, end, left, right, i, numberOfThreads;
+typedef struct {
+    int *A, *B, size, index, blockSize, threadsRequired;
+} Block;
+
+void merge_task(int *A, int *B, int size, 
+        int index, int block_size, int threads_required) {
+            
+    int start, mid, end, i, j, k;
 
     while (index < size) {
-        start = blockSize * index;
-        mid = start + (blockSize / 2) - 1;
-        end = start + blockSize - 1;
+        start = index * block_size;
+        mid = start + (block_size / 2) - 1;
+        end = start + block_size - 1;
         
-        left = start;
-        right = mid + 1;
         i = start;
+        j = mid + 1;
+        k = start;
         
         if (end > (size - 1)) {
             end = size - 1;
@@ -48,29 +53,30 @@ void merge_task(int *A, int *B, int size, int index,
             return;
         }
         
-        while (left <= mid && right <= end) {
-            if (A[left] <= A[right]) {
-                B[i++] = A[left++];
+        while (i <= mid && j <= end) {
+            if (A[i] <= A[j]) {
+                B[k++] = A[i++];
             } else {
-                B[i++] = A[right++];
+                B[k++] = A[j++];
             }
         }
         
-        while (left <= mid) {
-            B[i++] = A[left++];
+        while (i <= mid) {
+            B[k++] = A[i++];
         }
         
-        while (right <= end) {
-            B[i++] = A[right++];
+        while (j <= end) {
+            B[k++] = A[j++];
         }
 
-        index += threadsRequired;
+        index += threads_required;
     }
 }
 
 void parallel_merge_sort(int *array, int size) {
-    int *temp, *A, *B, threadsRequired;
-    thread *threads;
+    int *temp, *A, *B, threads_required;
+    Block *blocks; 
+    thread *threads; 
 
     temp = new int[size];
     memcpy(temp, array, sizeof(int) * size);
@@ -78,21 +84,23 @@ void parallel_merge_sort(int *array, int size) {
     A = array;
     B = temp;
 
-    for (int blockSize = 2; blockSize < (2 * size); blockSize *= 2) {
-        threadsRequired = min((int) THREADS, size / blockSize);
-        if (size % blockSize > 0) {
-            threadsRequired++;
+    for (int block_size = 2; block_size < (2 * size); block_size *= 2) {
+        threads_required = min((int) (THREADS - 1), size / block_size);
+        if (size % block_size > 0) {
+            threads_required++;
+        }
+        
+        blocks = new Block[threads_required];
+        threads = new thread[threads_required];
+        for (int i = 0; i < threads_required; i++) {
+            threads[i] = thread(merge_task, A, B, size, i, block_size, threads_required);
         }
 
-        threads = new thread[threadsRequired];
-        for (int i = 0; i < threadsRequired; i++) {
-            threads[i] = thread(merge_task, A, B, size, i, blockSize, threadsRequired);
-        }
-
-        for (int i = 0; i < threadsRequired; i++) {
+        for (int i = 0; i < threads_required; i++) {
             threads[i].join();
         }
 
+        delete [] blocks;
         delete [] threads;
         
         A = (A == array)? temp : array;

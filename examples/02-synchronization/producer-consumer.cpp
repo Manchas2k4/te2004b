@@ -4,7 +4,7 @@
 // Author: Pedro Perez
 // Description: This file implements the producer-consumer
 //              synchronization problem using pthreads.
-//              To compile: g++ -o app -pthread producer-consumer.cpp  
+//              To compile: g++ producer-consumer.cpp -lpthread -o app
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
@@ -14,92 +14,94 @@
 
 #include <iostream>
 #include <iomanip>
-#include <queue>
 #include <thread>
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
 
 using namespace std;
-using namespace std::chrono;
 
-#define SIZE 	10
-#define N		5
+const int SIZE = 10;
+const int MAXNUM = 10000;
+const int MAXPROD = 5;
+const int MAXCON = 5;
 
 mutex mtx;
-condition_variable not_empty;
-condition_variable not_full;
-queue<int> buffer;
-bool finished;
+condition_variable space_available;
+condition_variable data_available;
+
+int b[SIZE];
+int count = 0;
+int front = 0, rear = 0;
+
+void add_buffer(int i) {
+	b[rear] = i;
+	rear = (rear + 1) % SIZE;
+	count++;
+}
+
+int get_buffer(){
+	int v;
+	v = b[front];
+	front = (front + 1) % SIZE;
+	count--;
+	return v ;
+}
 
 void producer(int id) {
-    while(!finished) {
-		unique_lock<mutex> lock(mtx);
+	int i;
 
-		not_full.wait(lock, [] () { return buffer.size() != SIZE; });
+	cout << "Producter " << i << " starting...\n";
+	i = 0;
+	while (1) {
+		unique_lock<std::mutex> lock(mtx);
+        space_available.wait(lock, [] { return count < SIZE; });
 
-		cout << "\tBuffer size before producing " << buffer.size() << "\n";
-		buffer.push(id);
-		cout << "\tProducer " << id << " adding " << (id * 10) << "\n";
-		cout << "\tBuffer size after producing " << buffer.size() << "\n\n";
+        cout << "Producer " << id << " adding " << i 
+			 << " - Buffer elements = " << count << "\n";
+        add_buffer(i);
+        data_available.notify_one();
 
-		lock.unlock();
-
-		not_empty.notify_one();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        lock.unlock();
+        i = (i + 1) % MAXNUM;
+        this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
+	cout << "Producter " << i << " ending...\n";
 }
 
 void consumer(int id) {
-	int value;
+    cout << "Consumer " << id << " starting...\n";
+    for (int i = 0; i < 10; ++i) {
+        unique_lock<std::mutex> lock(mtx);
+        data_available.wait(lock, [] { return count > 0; });
 
-	while (!finished) {
-		unique_lock<mutex> lock(mtx);
+        int v = get_buffer();
+        cout << "Consumer " << id << " getting " << v 
+			 << " - Buffer elements = " << count << "\n";
+        space_available.notify_one();
 
-		not_empty.wait(lock, [] ()  { return buffer.size() != 0; });
-
-		cout << "Buffer size before consuming " << buffer.size() << "\n";
-		int val = buffer.front(); buffer.pop();
-		cout << "Consumer " << id << " taking " << (id * 10) << "\n";
-		cout << "Buffer size after consuming " << buffer.size() << "\n\n";
-
-		lock.unlock();
-
-		not_full.notify_one();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
+        lock.unlock();
+    }
+    cout << "Consuming " << id << " ending...\n";
 }
 
-int main(int argc, char* argv[])   {
-	thread producer_thread[N];
-    thread consumer_thread[N];
+int main() {
+    thread producer_threads[MAXPROD];
+    thread consumer_threads[MAXCON];
 
-	finished = false;
-
-	for (int i = 0; i < N; i++) {
-        producer_thread[i] = thread(producer, (i + 1));
+    for (int i = 0; i < MAXPROD; ++i) {
+        producer_threads[i] = thread(producer, i);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    this_thread::sleep_for(std::chrono::milliseconds(10000));
 
-    for (int i = 0; i < N; i++) {
-        consumer_thread[i] = thread(consumer, (i + 1));
+    for (int i = 0; i < MAXCON; ++i) {
+        consumer_threads[i] = thread(consumer, i);
+    }
+    
+    for (int i = 0; i < MAXCON; ++i) {
+        consumer_threads[i].join();
     }
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	
-	{
-		lock_guard<std::mutex> lock(mtx);
-		finished = true;
-		cout << "Finish them!!\n";
-	}
-
-	for (int i = 0; i < N; i++) {
-		producer_thread[i].join();
-		consumer_thread[i].join();
-	}
-
-	return 0;
+    return 0;
 }

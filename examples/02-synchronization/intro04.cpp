@@ -2,15 +2,18 @@
 //
 // File: intro04.cpp
 // Author: Pedro Perez
-// Description: This file implements a barrier.
-//              To compile: g++ -o app -pthread intro04.cpp 
+// Description: This file implements a synchronization strategy on a 
+//              shared variable using pthreads. Unlike the previous 
+//              example (intro03.cpp), here the increment 
+//              and decrement threads alternate.
+//
+//              To compile: g++ intro04.cpp -pthread -o app
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
 // =================================================================
-
 #include <iostream>
 #include <iomanip>
 #include <thread>
@@ -18,44 +21,53 @@
 
 using namespace std;
 
-#define THREADS std::thread::hardware_concurrency()
+int counter = 0;
 
-mutex mutex_lock, barrier;
+const int MAX_THREADS = 4;
+const int MAX_ITERATIONS = 5;
 
-int count = 0;
+mutex add_lock, sub_lock;
 
-void task(int id) {
-	int sleep = ((rand() % 3000) + 1);
+void increment(int id) {
+    int prev;
 
-	cout << "Thread " << id << " going to sleep for " << sleep << " miliseconds\n";
-	std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
-
-	mutex_lock.lock();
-	count++;
-	cout << "Thread " << id << " count = " << count << "\n";
-	mutex_lock.unlock();
-
-	if (count == THREADS) {
-		barrier.unlock();
-	}
-
-	barrier.lock();
-	barrier.unlock();
-	cout << "Thread " << id << " critical point\n";
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        add_lock.lock();
+        prev = counter++;
+        cout << "incrementing id = " << id << ", previous = " 
+             << prev << " current = " << counter << "\n";
+        sub_lock.unlock();
+    }
 }
 
-int main(int argc, char* argv[])   {
-	thread threads[THREADS];
+void decrement(int id) {
+    int prev;
 
-	barrier.lock();
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        sub_lock.lock();
+        prev = counter--;
+        cout << "decrementing id = " << id << ", previous = " 
+             << prev << " current = " << counter << "\n";
+        add_lock.unlock();
+    }
+}
 
-	for (int i = 0; i < THREADS; i++) {
-		threads[i] = thread(task, i);
-	}
+int main(int argc, char* argv[]) {
+    thread tids[MAX_THREADS];
 
-	for (int i = 0; i < THREADS; i++) {
-		threads[i].join();
-	}
+    add_lock.lock();
 
-	return 0;
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (i % 2 == 0) {
+            tids[i] = thread(increment, i);
+        } else {
+            tids[i] = thread(decrement, i);
+        }
+    }
+
+    for (int i = 0; i < MAX_THREADS; i++) {
+        tids[i].join();
+    }
+
+    return 0;
 }

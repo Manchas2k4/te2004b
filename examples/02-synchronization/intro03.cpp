@@ -2,17 +2,17 @@
 //
 // File: intro03.cpp
 // Author: Pedro Perez
-// Description: This file implements a synchronization strategy on a 
-//              shared variable using threads. Unlike the previous 
-//              example (intro02.cpp), here the increment 
-//              and decrement threads alternate.
-//              To compile: g++ -o app -pthread intro03.cpp 
+// Description: This file implements the solution to solve a race 
+//              condition problem.
+//
+//              To compile: g++ intro03.cpp -pthread -o app
 //
 // Copyright (c) 2024 by Tecnologico de Monterrey.
 // All Rights Reserved. May be reproduced for any non-commercial
 // purpose.
 //
 // =================================================================
+
 #include <iostream>
 #include <iomanip>
 #include <thread>
@@ -20,52 +20,35 @@
 
 using namespace std;
 
+const int MAX_THREADS = 4;
+const int MAX_ITERATIONS = 5;
+
 int counter = 0;
+mutex m;
 
-const int THREADS = 4;
-const int ITERATIONS = 5;
-
-mutex add_lock, sub_lock;
 
 void increment(int id) {
     int prev;
 
-    for (int i = 0; i < ITERATIONS; i++) {
-        add_lock.lock();
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+        m.lock();
         prev = counter++;
-        cout << "incrementing id = " << id << ", previous = " 
+        cout << "id=" << id << ", previous = " 
              << prev << " current = " << counter << "\n";
-        sub_lock.unlock();
-    }
-}
-
-void decrement(int id) {
-    int prev;
-
-    for (int i = 0; i < ITERATIONS; i++) {
-        sub_lock.lock();
-        prev = counter--;
-        cout << "decrementing id = " << id << ", previous = " 
-             << prev << " current = " << counter << "\n";
-        add_lock.unlock();
+        m.unlock();
     }
 }
 
 int main(int argc, char* argv[]) {
-    thread threads[THREADS];
-    
-    sub_lock.lock();
+    thread tids[MAX_THREADS];
+    int id[MAX_THREADS];
 
-    for (int i = 0; i < THREADS; i++) {
-        if (i % 2 == 0) {
-            threads[i] = thread(increment, i);
-        } else {
-            threads[i] = thread(decrement, i);
-        }
+    for (int i = 0; i < MAX_THREADS; i++) {
+        tids[i] = thread(increment, i);
     }
 
-    for (int i = 0; i < THREADS; i++) {
-        threads[i].join();
+    for (int i = 0; i < MAX_THREADS; i++) {
+        tids[i].join();
     }
 
     return 0;

@@ -15,89 +15,99 @@
 #include <iostream>
 #include <iomanip>
 #include <thread>
+#include <vector>
 #include <mutex>
 #include <condition_variable>
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
 
 using namespace std;
 
-#define PHILOSOPHERS    5
-#define SLEEP           1000
+const int MAX_PHILOSOPHERS = 5;
+const int MAX_ITERATIONS = 5;
+const int MAX_SLEEP_TIME = 5000;
+enum {THINKING, HUNGRY, EATING} state[MAX_PHILOSOPHERS];
 
-enum {THINKING, HUNGRY, EATING} state[PHILOSOPHERS];
-mutex chopsticks[PHILOSOPHERS];
-thread threads[PHILOSOPHERS];
-mutex mtx;
-condition_variable cond_var;
-bool finished;
+mutex mutex_lock;
+condition_variable chopsticks[MAX_PHILOSOPHERS];
 
 int left(int i) {
-    return ((i + (PHILOSOPHERS - 1)) % PHILOSOPHERS);
+    return (i == 0) ? (MAX_PHILOSOPHERS - 1) : (i - 1);
 }
 
 int right(int i) {
-    return ((i + 1) % PHILOSOPHERS);
+    return (i == MAX_PHILOSOPHERS - 1) ? 0 : (i + 1);
 }
 
-bool can_eat(int i) {
-    return (state[i] == HUNGRY &&
-        state[left(i)] != EATING &&
-        state[right(i)] != EATING);
-}
-
-void philosopher(int i) {
-    cout << "Philosopher " << i << " is starting...\n";
-    while (!finished) {
-        unique_lock<std::mutex> lock(mtx);
-
-        state[i] = HUNGRY;
-        cout << "Philosopher " << i << " is hungry" << std::endl;
-        cond_var.wait(lock, [i]() { return can_eat(i); });
-
+void test(int i) {
+    if (state[i] == HUNGRY && 
+        state[left(i)] != EATING && 
+        state[right(i)] != EATING) {
         state[i] = EATING;
-        cout << "Philosopher " << i << " takes fork " << left(i) 
-                << " and " << right(i) << std::endl;
-
-        lock.unlock();
-
-        cout << "Philosopher " << i << " is eating\n";
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        lock.lock();
-
-        state[i] = THINKING;
-        cout << "Philosopher " << i << " putting fork " << left(i) 
-            << " and " << right(i) << " down" << std::endl;
-
-        cout << "Philosopher " << i << " is thinking" << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-        cond_var.notify_all();
+        chopsticks[i].notify_one();
     }
-    cout << "Philosopher " << i << " is ending.\n";
 }
 
-int main(int argc, char* argv[]) {
-    finished = false;
+void pickupChopsticks(int i) {
+    unique_lock<std::mutex> lock(mutex_lock);
+    state[i] = HUNGRY;
+    test(i);
+    while (state[i] != EATING) {
+        chopsticks[i].wait(lock);
+    }
+}
 
-    for (int i = 0; i < PHILOSOPHERS; i++) {
+void returnChopsticks(int i) {
+    unique_lock<std::mutex> lock(mutex_lock);
+    state[i] = THINKING;
+    test(left(i));
+    test(right(i));
+}
+
+void thinking(int sleepTime) {
+    this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+}
+
+void eating(int sleepTime) {
+    this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+}
+
+void philosopher(int id) {
+    int sleepTime;
+    int i = 0;
+
+    srand(time(0) + id);
+    cout << "Philosopher " << id << " is starting...\n";
+    while (i < MAX_ITERATIONS) {
+        sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
+        thinking(sleepTime);
+
+        pickupChopsticks(id);
+        cout << "Philosopher " << id << " is eating\n";
+        sleepTime = (rand() % MAX_SLEEP_TIME) + 1;
+        eating(sleepTime);
+        returnChopsticks(id);
+
+        cout << "Philosopher " << id << " is thinking\n";
+        i++;
+    }
+}
+
+int main() {
+    vector<thread> threads(MAX_PHILOSOPHERS);
+
+    for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
         state[i] = THINKING;
     }
-    
-    for (int i = 0; i < PHILOSOPHERS; i++) {
-        threads[i] = thread(philosopher, i);
+
+    for (int i = 0; i < MAX_PHILOSOPHERS; i++) {
+        threads[i] = std::thread(philosopher, i);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
-
-    {
-		lock_guard<std::mutex> lock(mtx);
-		finished = true;
-		cout << "Finish them!!\n";
-	}
-
-	for (int i = 0; i < PHILOSOPHERS; i++) {
-		threads[i].join();
-	}
+    for (auto& th : threads) {
+        th.join();
+    }
 
     return 0;
 }
